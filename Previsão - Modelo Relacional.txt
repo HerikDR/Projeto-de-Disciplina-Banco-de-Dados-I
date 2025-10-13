@@ -1,0 +1,46 @@
+Usuario = {id_usuario, nome, email, senha, data_de_cadastro}
+
+Curso = {id_curso, nome_curso}
+
+Materia = {id_materia, nome, id_curso}
+  id_curso referencia Curso
+
+Questao = {id_questao, enunciado, resposta_correta, alternativa, id_materia}
+  id_materia referencia Materia
+
+Simulado = {id_simulado, id_usuario, data_realizacao}
+  id_usuario referencia Usuario
+
+Resposta_usuario = {id_resposta, id_usuario, id_questao, id_simulado, resposta_fornecida, data_resposta}
+  id_usuario referencia Usuario
+  id_questao referencia Questao
+  id_simulado referencia Simulado
+
+Desempenho = {id_desempenho, id_usuario, id_curso, id_materia}
+  id_usuario referencia Usuario
+  id_curso referencia Curso
+  id_materia referencia Materia
+
+Presta = {id_usuario, id_curso}
+  id_usuario referencia Usuario
+  id_curso referencia Curso
+
+Realiza = {id_usuario, id_simulado}
+  id_usuario referencia Usuario
+  id_simulado referencia Simulado
+
+Contem = {id_simulado, id_questao}
+  id_simulado referencia Simulado
+  id_questao referencia Questao
+
+Pertence = {id_questao, id_materia}
+  id_questao referencia Questao
+  id_materia referencia Materia
+
+Fornece = {id_curso, id_materia}
+  id_curso referencia Curso
+  id_materia referencia Materia
+
+Recebe = {id_simulado, id_resposta}
+  id_simulado referencia Simulado
+  id_resposta referencia Resposta_usuario
