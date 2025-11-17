@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Simulados - Resultado</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header>
+    <h1>Sistema de Simulados</h1>
+</header>
+
+<div class="container">
+    <!-- Card de Resultado -->
+    <div class="resultado-summary">
+        <h2>Simulado Finalizado!</h2>
+        <p>Confira seu desempenho abaixo:</p>
+
+        <!-- Estatísticas -->
+        <div class="resultado-stats">
+            <div class="stat-box">
+                <div class="stat-number" id="total-questoes">0</div>
+                <div class="stat-label">Total de Questões</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="acertos">0</div>
+                <div class="stat-label">Acertos</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="erros">0</div>
+                <div class="stat-label">Erros</div>
+            </div>
+        </div>
+
+        <!-- Nota e Percentual -->
+        <div style="margin-top: 30px;">
+            <p style="font-size: 20px; margin-bottom: 10px;">
+                <strong>Nota:</strong> <span id="nota">0</span>/10
+            </p>
+            <p style="font-size: 18px; color: #666;">
+                <strong>Percentual de Acerto:</strong> <span id="percentual">0%</span>
+            </p>
+        </div>
+    </div>
+
+    <!-- Detalhes das Questões -->
+    <div class="card">
+        <h2>Detalhes das Questões</h2>
+        <p style="margin-bottom: 20px;">Veja quais questões você acertou e errou:</p>
+        <div id="detalhes-container"></div>
+    </div>
+
+    <!-- Botões de Ação -->
+    <div class="card text-center">
+        <button id="btn-novo-simulado" class="btn btn-large">
+            Fazer Novo Simulado
+        </button>
+        <button id="btn-voltar-home" class="btn btn-secondary">
+            Voltar para Home
+        </button>
+    </div>
+</div>
+
+<script>
+    // Elementos do DOM
+    const totalQuestoesSpan = document.getElementById('total-questoes');
+    const acertosSpan = document.getElementById('acertos');
+    const errosSpan = document.getElementById('erros');
+    const notaSpan = document.getElementById('nota');
+    const percentualSpan = document.getElementById('percentual');
+    const detalhesContainer = document.getElementById('detalhes-container');
+    const btnNovoSimulado = document.getElementById('btn-novo-simulado');
+    const btnVoltarHome = document.getElementById('btn-voltar-home');
+
+    // Recupera resultado do localStorage
+    const resultado = JSON.parse(localStorage.getItem('resultado'));
+    const usuarioLogado = JSON.parse(localStorage.getItem('usuario'));
+
+    // Verifica se tem resultado
+    if (!resultado || !usuarioLogado) {
+        alert('Erro: resultado não encontrado. Voltando para home.');
+        window.location.href = 'home.html';
+    }
+
+    // Exibe estatísticas
+    totalQuestoesSpan.textContent = resultado.totalQuestoes;
+    acertosSpan.textContent = resultado.acertos;
+    errosSpan.textContent = resultado.erros;
+    notaSpan.textContent = resultado.nota;
+    percentualSpan.textContent = resultado.percentual;
+
+    // Renderiza detalhes das questões
+    function renderizarDetalhes() {
+        detalhesContainer.innerHTML = '';
+
+        if (resultado.detalhesQuestoes && resultado.detalhesQuestoes.length > 0) {
+            resultado.detalhesQuestoes.forEach((detalhe, index) => {
+                const detalhesDiv = document.createElement('div');
+                detalhesDiv.className = 'questao';
+
+                const statusTexto = detalhe.acertou ? '✓ ACERTOU' : '✗ ERROU';
+                const statusCor = detalhe.acertou ? '#333' : '#666';
+
+                detalhesDiv.innerHTML = `
+                        <div class="questao-numero">
+                            Questão ${index + 1} -
+                            <span style="font-weight: bold; color: ${statusCor};">${statusTexto}</span>
+                        </div>
+                        <div class="questao-enunciado" style="font-size: 16px; margin-bottom: 15px;">
+                            ${detalhe.enunciado}
+                        </div>
+                        <div style="margin-top: 10px;">
+                            <p style="margin-bottom: 5px;">
+                                <strong>Sua resposta:</strong>
+                                <span style="color: ${detalhe.acertou ? '#333' : '#999'};">
+                                    ${detalhe.respostaUsuario}
+                                </span>
+                            </p>
+                            ${!detalhe.acertou ? `
+                                <p style="margin-bottom: 5px;">
+                                    <strong>Resposta correta:</strong>
+                                    <span style="color: #333;">
+                                        ${detalhe.respostaCorreta}
+                                    </span>
+                                </p>
+                            ` : ''}
+                        </div>
+                    `;
+
+                detalhesContainer.appendChild(detalhesDiv);
+            });
+        } else {
+            detalhesContainer.innerHTML = '<p>Detalhes das questões não disponíveis.</p>';
+        }
+    }
+
+    // Renderiza os detalhes
+    renderizarDetalhes();
+
+    // Handler do botão "Fazer Novo Simulado"
+    btnNovoSimulado.addEventListener('click', () => {
+        // Limpa dados antigos
+        localStorage.removeItem('simuladoAtual');
+        localStorage.removeItem('resultado');
+        // Volta para home
+        window.location.href = 'home.html';
+    });
+
+    // Handler do botão "Voltar para Home"
+    btnVoltarHome.addEventListener('click', () => {
+        // Limpa dados antigos
+        localStorage.removeItem('simuladoAtual');
+        localStorage.removeItem('resultado');
+        // Volta para home
+        window.location.href = 'home.html';
+    });
+</script>
+</body>
+</html>

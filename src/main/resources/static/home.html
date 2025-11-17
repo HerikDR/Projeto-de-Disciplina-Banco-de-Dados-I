@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Simulados - Home</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header>
+    <h1>Sistema de Simulados</h1>
+</header>
+
+<div class="container">
+    <!-- Card de Boas-vindas -->
+    <div class="card">
+        <h2>Bem-vindo(a), <span id="nome-usuario"></span>!</h2>
+        <p>Prepare-se para testar seus conhecimentos através de simulados personalizados.</p>
+        <p>Cada simulado contém 10 questões de matérias variadas, selecionadas aleatoriamente para você.</p>
+    </div>
+
+    <!-- Card de Ações -->
+    <div class="card text-center">
+        <h2>Iniciar Novo Simulado</h2>
+        <p>Clique no botão abaixo para gerar um novo simulado com 10 questões aleatórias.</p>
+        <button id="btn-iniciar-simulado" class="btn btn-large">
+            Iniciar Simulado
+        </button>
+        <div id="loading" class="loading hidden">
+            Gerando simulado, aguarde...
+        </div>
+    </div>
+
+    <!-- Botão de Logout -->
+    <div class="card text-center">
+        <button id="btn-logout" class="btn btn-secondary">
+            Sair
+        </button>
+    </div>
+</div>
+
+<script>
+    // URL base da API
+    const API_URL = 'http://localhost:8080/api';
+
+    // Elementos do DOM
+    const nomeUsuarioSpan = document.getElementById('nome-usuario');
+    const btnIniciarSimulado = document.getElementById('btn-iniciar-simulado');
+    const loadingDiv = document.getElementById('loading');
+    const btnLogout = document.getElementById('btn-logout');
+
+    // Verificar se o usuário está logado
+    const usuarioLogado = JSON.parse(localStorage.getItem('usuario'));
+
+    if (!usuarioLogado) {
+        // Se não estiver logado, redireciona para login
+        window.location.href = 'index.html';
+    } else {
+        // Exibe o nome do usuário
+        nomeUsuarioSpan.textContent = usuarioLogado.nome;
+    }
+
+    // Handler do botão "Iniciar Simulado"
+    btnIniciarSimulado.addEventListener('click', async () => {
+        // Desabilita o botão e mostra loading
+        btnIniciarSimulado.disabled = true;
+        loadingDiv.classList.remove('hidden');
+
+        try {
+            // Faz requisição para gerar simulado aleatório com 10 questões
+            const response = await fetch(`${API_URL}/simulados/gerar-aleatorio`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    idUsuario: usuarioLogado.idUsuario,
+                    quantidadeQuestoes: 10
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.sucesso) {
+                // Salva os dados do simulado no localStorage
+                localStorage.setItem('simuladoAtual', JSON.stringify({
+                    simulado: data.simulado,
+                    questoes: data.questoes,
+                    totalQuestoes: data.totalQuestoes
+                }));
+
+                // Redireciona para a página do simulado
+                window.location.href = 'simulado.html';
+            } else {
+                alert('Erro ao gerar simulado: ' + data.mensagem);
+                btnIniciarSimulado.disabled = false;
+                loadingDiv.classList.add('hidden');
+            }
+        } catch (error) {
+            alert('Erro ao conectar com o servidor. Verifique se o backend está rodando.');
+            console.error('Erro:', error);
+            btnIniciarSimulado.disabled = false;
+            loadingDiv.classList.add('hidden');
+        }
+    });
+
+    // Handler do botão "Sair"
+    btnLogout.addEventListener('click', () => {
+        // Remove dados do localStorage
+        localStorage.removeItem('usuario');
+        localStorage.removeItem('simuladoAtual');
+        // Redireciona para login
+        window.location.href = 'index.html';
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Simulados - Realizando Simulado</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header>
+    <h1>Sistema de Simulados</h1>
+</header>
+
+<div class="container">
+    <!-- Informações do Simulado -->
+    <div class="card">
+        <h2>Simulado em Andamento</h2>
+        <p><strong>Aluno:</strong> <span id="nome-usuario"></span></p>
+        <p><strong>Total de Questões:</strong> <span id="total-questoes"></span></p>
+        <p>Marque a alternativa correta para cada questão e clique em "Finalizar Simulado" ao terminar.</p>
+    </div>
+
+    <!-- Container de Questões -->
+    <div id="questoes-container"></div>
+
+    <!-- Botões de Ação -->
+    <div class="card text-center">
+        <button id="btn-finalizar" class="btn btn-large">
+            Finalizar Simulado
+        </button>
+        <button id="btn-cancelar" class="btn btn-secondary">
+            Cancelar e Voltar
+        </button>
+    </div>
+</div>
+
+<script>
+    // URL base da API
+    const API_URL = 'http://localhost:8080/api';
+
+    // Elementos do DOM
+    const nomeUsuarioSpan = document.getElementById('nome-usuario');
+    const totalQuestoesSpan = document.getElementById('total-questoes');
+    const questoesContainer = document.getElementById('questoes-container');
+    const btnFinalizar = document.getElementById('btn-finalizar');
+    const btnCancelar = document.getElementById('btn-cancelar');
+
+    // Recupera dados do localStorage
+    const usuarioLogado = JSON.parse(localStorage.getItem('usuario'));
+    const simuladoAtual = JSON.parse(localStorage.getItem('simuladoAtual'));
+
+    // Verifica se tem dados
+    if (!usuarioLogado || !simuladoAtual) {
+        alert('Erro: dados do simulado não encontrados. Voltando para home.');
+        window.location.href = 'home.html';
+    }
+
+    // Exibe informações do usuário e simulado
+    nomeUsuarioSpan.textContent = usuarioLogado.nome;
+    totalQuestoesSpan.textContent = simuladoAtual.totalQuestoes;
+
+    // Renderiza as questões
+    function renderizarQuestoes() {
+        questoesContainer.innerHTML = '';
+
+        simuladoAtual.questoes.forEach((questao, index) => {
+            const questaoDiv = document.createElement('div');
+            questaoDiv.className = 'questao';
+
+            // Parse das alternativas (formato: "A) texto\nB) texto\nC) texto...")
+            const alternativasTexto = questao.alternativa.split('\n').filter(alt => alt.trim());
+
+            questaoDiv.innerHTML = `
+                    <div class="questao-numero">Questão ${index + 1} de ${simuladoAtual.totalQuestoes}</div>
+                    <div class="questao-enunciado">${questao.enunciado}</div>
+                    <div class="alternativas">
+                        ${alternativasTexto.map(alt => {
+                const letra = alt.charAt(0); // Pega a letra (A, B, C, D, E)
+                const texto = alt.substring(3).trim(); // Pega o texto após "X) "
+                return `
+                                <div class="alternativa">
+                                    <input
+                                        type="radio"
+                                        name="questao-${questao.idQuestao}"
+                                        id="q${questao.idQuestao}-${letra}"
+                                        value="${letra}"
+                                    >
+                                    <label for="q${questao.idQuestao}-${letra}">
+                                        <strong>${letra})</strong> ${texto}
+                                    </label>
+                                </div>
+                            `;
+            }).join('')}
+                    </div>
+                `;
+
+            questoesContainer.appendChild(questaoDiv);
+        });
+    }
+
+    // Renderiza as questões na tela
+    renderizarQuestoes();
+
+    // Handler do botão "Finalizar Simulado"
+    btnFinalizar.addEventListener('click', async () => {
+        // Coleta as respostas do usuário
+        const respostas = [];
+        let todasRespondidas = true;
+
+        simuladoAtual.questoes.forEach(questao => {
+            const respostaSelecionada = document.querySelector(`input[name="questao-${questao.idQuestao}"]:checked`);
+
+            if (!respostaSelecionada) {
+                todasRespondidas = false;
+            } else {
+                respostas.push({
+                    idQuestao: questao.idQuestao,
+                    respostaFornecida: respostaSelecionada.value
+                });
+            }
+        });
+
+        // Verifica se todas as questões foram respondidas
+        if (!todasRespondidas) {
+            alert('Por favor, responda todas as questões antes de finalizar!');
+            return;
+        }
+
+        // Desabilita botões
+        btnFinalizar.disabled = true;
+        btnCancelar.disabled = true;
+        btnFinalizar.textContent = 'Enviando respostas...';
+
+        try {
+            // Envia cada resposta para a API
+            for (const resposta of respostas) {
+                await fetch(`${API_URL}/respostas/registrar`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        idSimulado: simuladoAtual.simulado.idSimulado,
+                        idQuestao: resposta.idQuestao,
+                        idUsuario: usuarioLogado.idUsuario,
+                        respostaFornecida: resposta.respostaFornecida
+                    })
+                });
+            }
+
+            // Após enviar todas as respostas, corrige o simulado
+            const correcaoResponse = await fetch(`${API_URL}/respostas/corrigir/${simuladoAtual.simulado.idSimulado}`, {
+                method: 'POST'
+            });
+
+            const resultado = await correcaoResponse.json();
+
+            if (resultado.sucesso) {
+                // Salva resultado no localStorage
+                localStorage.setItem('resultado', JSON.stringify(resultado));
+                // Redireciona para página de resultado
+                window.location.href = 'resultado.html';
+            } else {
+                alert('Erro ao corrigir simulado: ' + resultado.mensagem);
+                btnFinalizar.disabled = false;
+                btnCancelar.disabled = false;
+                btnFinalizar.textContent = 'Finalizar Simulado';
+            }
+        } catch (error) {
+            alert('Erro ao enviar respostas. Verifique se o backend está rodando.');
+            console.error('Erro:', error);
+            btnFinalizar.disabled = false;
+            btnCancelar.disabled = false;
+            btnFinalizar.textContent = 'Finalizar Simulado';
+        }
+    });
+
+    // Handler do botão "Cancelar"
+    btnCancelar.addEventListener('click', () => {
+        if (confirm('Tem certeza que deseja cancelar o simulado? Seu progresso será perdido.')) {
+            localStorage.removeItem('simuladoAtual');
+            window.location.href = 'home.html';
+        }
+    });
+</script>
+</body>
+</html>

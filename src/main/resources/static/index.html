@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Simulados - Login</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header>
+    <h1>Sistema de Simulados</h1>
+</header>
+
+<div class="container">
+    <!-- Mensagens de erro/sucesso -->
+    <div id="mensagem" class="mensagem hidden"></div>
+
+    <!-- Card de Login -->
+    <div id="login-card" class="card">
+        <h2>Login</h2>
+        <form id="login-form">
+            <div class="form-group">
+                <label for="login-email">Email:</label>
+                <input type="email" id="login-email" required>
+            </div>
+            <div class="form-group">
+                <label for="login-senha">Senha:</label>
+                <input type="password" id="login-senha" required>
+            </div>
+            <button type="submit" class="btn btn-full">Entrar</button>
+        </form>
+        <p class="text-center mt-20">
+            Não tem conta?
+            <a href="#" id="mostrar-cadastro">Cadastre-se aqui</a>
+        </p>
+    </div>
+
+    <!-- Card de Cadastro (inicialmente oculto) -->
+    <div id="cadastro-card" class="card hidden">
+        <h2>Cadastro</h2>
+        <form id="cadastro-form">
+            <div class="form-group">
+                <label for="cadastro-nome">Nome Completo:</label>
+                <input type="text" id="cadastro-nome" required>
+            </div>
+            <div class="form-group">
+                <label for="cadastro-email">Email:</label>
+                <input type="email" id="cadastro-email" required>
+            </div>
+            <div class="form-group">
+                <label for="cadastro-senha">Senha (mínimo 6 caracteres):</label>
+                <input type="password" id="cadastro-senha" minlength="6" required>
+            </div>
+            <div class="form-group">
+                <label for="cadastro-confirma-senha">Confirmar Senha:</label>
+                <input type="password" id="cadastro-confirma-senha" minlength="6" required>
+            </div>
+            <button type="submit" class="btn btn-full">Cadastrar</button>
+        </form>
+        <p class="text-center mt-20">
+            Já tem conta?
+            <a href="#" id="mostrar-login">Faça login aqui</a>
+        </p>
+    </div>
+</div>
+
+<script>
+    // URL base da API
+    const API_URL = 'http://localhost:8080/api';
+
+    // Elementos do DOM
+    const loginCard = document.getElementById('login-card');
+    const cadastroCard = document.getElementById('cadastro-card');
+    const loginForm = document.getElementById('login-form');
+    const cadastroForm = document.getElementById('cadastro-form');
+    const mensagemDiv = document.getElementById('mensagem');
+
+    // Alternar entre login e cadastro
+    document.getElementById('mostrar-cadastro').addEventListener('click', (e) => {
+        e.preventDefault();
+        loginCard.classList.add('hidden');
+        cadastroCard.classList.remove('hidden');
+        limparMensagem();
+    });
+
+    document.getElementById('mostrar-login').addEventListener('click', (e) => {
+        e.preventDefault();
+        cadastroCard.classList.add('hidden');
+        loginCard.classList.remove('hidden');
+        limparMensagem();
+    });
+
+    // Função para exibir mensagens
+    function mostrarMensagem(mensagem, tipo) {
+        mensagemDiv.textContent = mensagem;
+        mensagemDiv.className = `mensagem mensagem-${tipo}`;
+        mensagemDiv.classList.remove('hidden');
+    }
+
+    function limparMensagem() {
+        mensagemDiv.classList.add('hidden');
+    }
+
+    // Handler do formulário de LOGIN
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        limparMensagem();
+
+        const email = document.getElementById('login-email').value;
+        const senha = document.getElementById('login-senha').value;
+
+        try {
+            const response = await fetch(`${API_URL}/usuarios/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email, senha })
+            });
+
+            const data = await response.json();
+
+            if (data.sucesso) {
+                // Salva dados do usuário no localStorage
+                localStorage.setItem('usuario', JSON.stringify(data.usuario));
+                // Redireciona para home
+                window.location.href = 'home.html';
+            } else {
+                mostrarMensagem(data.mensagem, 'erro');
+            }
+        } catch (error) {
+            mostrarMensagem('Erro ao conectar com o servidor. Verifique se o backend está rodando.', 'erro');
+            console.error('Erro:', error);
+        }
+    });
+
+    // Handler do formulário de CADASTRO
+    cadastroForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        limparMensagem();
+
+        const nome = document.getElementById('cadastro-nome').value;
+        const email = document.getElementById('cadastro-email').value;
+        const senha = document.getElementById('cadastro-senha').value;
+        const confirmaSenha = document.getElementById('cadastro-confirma-senha').value;
+
+        // Validação: senhas coincidem?
+        if (senha !== confirmaSenha) {
+            mostrarMensagem('As senhas não coincidem!', 'erro');
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_URL}/usuarios/cadastrar`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ nome, email, senha })
+            });
+
+            const data = await response.json();
+
+            if (data.sucesso) {
+                mostrarMensagem('Cadastro realizado com sucesso! Faça login.', 'sucesso');
+                // Limpa o formulário
+                cadastroForm.reset();
+                // Volta para o login após 2 segundos
+                setTimeout(() => {
+                    cadastroCard.classList.add('hidden');
+                    loginCard.classList.remove('hidden');
+                    limparMensagem();
+                }, 2000);
+            } else {
+                mostrarMensagem(data.mensagem, 'erro');
+            }
+        } catch (error) {
+            mostrarMensagem('Erro ao conectar com o servidor. Verifique se o backend está rodando.', 'erro');
+            console.error('Erro:', error);
+        }
+    });
+</script>
+</body>
+</html>
