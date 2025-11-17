@@ -1,5 +1,3 @@
-# Projeto-de-Disciplina-Banco-de-Dados-I
-
 # Projeto de Banco de Dados: Plataforma de Simulados
 
 ## 📋 Descrição do Sistema
