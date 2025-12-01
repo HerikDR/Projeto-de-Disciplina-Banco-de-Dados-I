@@ -6,40 +6,39 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
-/**
- * Controller REST para gerenciar operações de Desempenho
- * Base URL: /api/desempenho
- */
 @RestController
 @RequestMapping("/api/desempenho")
 @CrossOrigin(origins = "*")
 public class DesempenhoController {
 
-    private final DesempenhoService desempenhoService;
+    private DesempenhoService desempenhoService;
 
-    // Construtor - instancia o service
-    public DesempenhoController() {
+    public DesempenhoController() throws SQLException {
         this.desempenhoService = new DesempenhoService();
     }
 
     /**
      * POST /api/desempenho/registrar
      * Registra um desempenho
-     * Body: { "idUsuario": 1, "idCurso": 1, "idMateria": 1 }
      */
     @PostMapping("/registrar")
-    public ResponseEntity<?> registrarDesempenho(@RequestBody Map<String, Object> dados) {
+    public ResponseEntity<Map<String, Object>> registrarDesempenho(@RequestBody Map<String, Object> dados) {
         try {
             Integer idUsuario = (Integer) dados.get("idUsuario");
             Integer idCurso = (Integer) dados.get("idCurso");
             Integer idMateria = (Integer) dados.get("idMateria");
 
-            Desempenho desempenho = desempenhoService.registrarDesempenho(idUsuario, idCurso, idMateria);
+            Desempenho desempenho = new Desempenho();
+            desempenho.setIdUsuario(idUsuario);
+            desempenho.setIdCurso(idCurso);
+            desempenho.setIdMateria(idMateria);
+
+            desempenhoService.salvarDesempenho(desempenho);
 
             Map<String, Object> response = new HashMap<>();
             response.put("sucesso", true);
@@ -47,12 +46,6 @@ public class DesempenhoController {
             response.put("desempenho", desempenho);
 
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
-
-        } catch (IllegalArgumentException e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("sucesso", false);
-            response.put("mensagem", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
 
         } catch (Exception e) {
             Map<String, Object> response = new HashMap<>();
@@ -63,171 +56,25 @@ public class DesempenhoController {
     }
 
     /**
-     * GET /api/desempenho/estatisticas/{idUsuario}
-     * Calcula estatísticas gerais de um usuário
-     * Retorna: total de questões, acertos, erros, taxa de acerto, nota média
-     */
-    @GetMapping("/estatisticas/{idUsuario}")
-    public ResponseEntity<?> calcularEstatisticasGerais(@PathVariable Integer idUsuario) {
-        try {
-            Map<String, Object> estatisticas = desempenhoService.calcularEstatisticasGerais(idUsuario);
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("sucesso", true);
-            response.putAll(estatisticas);
-
-            return ResponseEntity.ok(response);
-
-        } catch (IllegalArgumentException e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("sucesso", false);
-            response.put("mensagem", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
-
-        } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("sucesso", false);
-            response.put("mensagem", "Erro ao calcular estatísticas: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
-    }
-
-    /**
-     * GET /api/desempenho/por-materia/{idUsuario}
-     * Calcula desempenho de um usuário separado por matéria
-     */
-    @GetMapping("/por-materia/{idUsuario}")
-    public ResponseEntity<?> calcularDesempenhoPorMateria(@PathVariable Integer idUsuario) {
-        try {
-            Map<Integer, Map<String, Object>> desempenho =
-                    desempenhoService.calcularDesempenhoPorMateria(idUsuario);
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("sucesso", true);
-            response.put("desempenhoPorMateria", desempenho);
-
-            return ResponseEntity.ok(response);
-
-        } catch (IllegalArgumentException e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("sucesso", false);
-            response.put("mensagem", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
-
-        } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("sucesso", false);
-            response.put("mensagem", "Erro ao calcular desempenho: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
-    }
-
-    /**
-     * GET /api/desempenho/pontos-fortes/{idUsuario}/{limite}
-     * Identifica as matérias com melhor desempenho do usuário
-     */
-    @GetMapping("/pontos-fortes/{idUsuario}/{limite}")
-    public ResponseEntity<?> identificarPontosFortes(@PathVariable Integer idUsuario,
-                                                     @PathVariable int limite) {
-        try {
-            List<Map<String, Object>> pontosFortes =
-                    desempenhoService.identificarPontosFortes(idUsuario, limite);
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("sucesso", true);
-            response.put("pontosFortes", pontosFortes);
-
-            return ResponseEntity.ok(response);
-
-        } catch (IllegalArgumentException e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("sucesso", false);
-            response.put("mensagem", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
-
-        } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("sucesso", false);
-            response.put("mensagem", "Erro ao identificar pontos fortes: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
-    }
-
-    /**
-     * GET /api/desempenho/pontos-fracos/{idUsuario}/{limite}
-     * Identifica as matérias com pior desempenho do usuário (para focar estudos)
-     */
-    @GetMapping("/pontos-fracos/{idUsuario}/{limite}")
-    public ResponseEntity<?> identificarPontosFracos(@PathVariable Integer idUsuario,
-                                                     @PathVariable int limite) {
-        try {
-            List<Map<String, Object>> pontosFracos =
-                    desempenhoService.identificarPontosFracos(idUsuario, limite);
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("sucesso", true);
-            response.put("pontosFracos", pontosFracos);
-
-            return ResponseEntity.ok(response);
-
-        } catch (IllegalArgumentException e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("sucesso", false);
-            response.put("mensagem", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
-
-        } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("sucesso", false);
-            response.put("mensagem", "Erro ao identificar pontos fracos: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
-    }
-
-    /**
-     * GET /api/desempenho
-     * Lista todos os desempenhos
-     */
-    @GetMapping
-    public ResponseEntity<?> listarDesempenhos() {
-        try {
-            List<Desempenho> desempenhos = desempenhoService.listarTodosDesempenhos();
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("sucesso", true);
-            response.put("total", desempenhos.size());
-            response.put("desempenhos", desempenhos);
-
-            return ResponseEntity.ok(response);
-
-        } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("sucesso", false);
-            response.put("mensagem", "Erro ao listar desempenhos: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
-    }
-
-    /**
      * GET /api/desempenho/{id}
      * Busca um desempenho por ID
      */
     @GetMapping("/{id}")
-    public ResponseEntity<?> buscarDesempenhoPorId(@PathVariable Integer id) {
+    public ResponseEntity<Map<String, Object>> buscarPorId(@PathVariable int id) {
         try {
-            Optional<Desempenho> desempenho = desempenhoService.buscarDesempenhoPorId(id);
+            Desempenho desempenho = desempenhoService.buscarPorId(id);
 
-            if (desempenho.isPresent()) {
-                Map<String, Object> response = new HashMap<>();
-                response.put("sucesso", true);
-                response.put("desempenho", desempenho.get());
-                return ResponseEntity.ok(response);
-            } else {
-                Map<String, Object> response = new HashMap<>();
-                response.put("sucesso", false);
-                response.put("mensagem", "Desempenho não encontrado!");
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-            }
+            Map<String, Object> response = new HashMap<>();
+            response.put("sucesso", true);
+            response.put("desempenho", desempenho);
+
+            return ResponseEntity.ok(response);
+
+        } catch (IllegalArgumentException e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("sucesso", false);
+            response.put("mensagem", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
 
         } catch (Exception e) {
             Map<String, Object> response = new HashMap<>();
@@ -242,9 +89,9 @@ public class DesempenhoController {
      * Lista todos os desempenhos de um usuário
      */
     @GetMapping("/usuario/{idUsuario}")
-    public ResponseEntity<?> listarDesempenhosPorUsuario(@PathVariable Integer idUsuario) {
+    public ResponseEntity<Map<String, Object>> listarPorUsuario(@PathVariable int idUsuario) {
         try {
-            List<Desempenho> desempenhos = desempenhoService.listarDesempenhosPorUsuario(idUsuario);
+            List<Desempenho> desempenhos = desempenhoService.buscarPorUsuario(idUsuario);
 
             Map<String, Object> response = new HashMap<>();
             response.put("sucesso", true);
@@ -252,12 +99,6 @@ public class DesempenhoController {
             response.put("desempenhos", desempenhos);
 
             return ResponseEntity.ok(response);
-
-        } catch (IllegalArgumentException e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("sucesso", false);
-            response.put("mensagem", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
 
         } catch (Exception e) {
             Map<String, Object> response = new HashMap<>();
@@ -268,31 +109,204 @@ public class DesempenhoController {
     }
 
     /**
+     * GET /api/desempenho/curso/{idCurso}
+     * Lista desempenhos por curso
+     */
+    @GetMapping("/curso/{idCurso}")
+    public ResponseEntity<Map<String, Object>> listarPorCurso(@PathVariable int idCurso) {
+        try {
+            List<Desempenho> desempenhos = desempenhoService.buscarPorCurso(idCurso);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("sucesso", true);
+            response.put("total", desempenhos.size());
+            response.put("desempenhos", desempenhos);
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("sucesso", false);
+            response.put("mensagem", "Erro ao listar desempenhos: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * GET /api/desempenho/materia/{idMateria}
+     * Lista desempenhos por matéria
+     */
+    @GetMapping("/materia/{idMateria}")
+    public ResponseEntity<Map<String, Object>> listarPorMateria(@PathVariable int idMateria) {
+        try {
+            List<Desempenho> desempenhos = desempenhoService.buscarPorMateria(idMateria);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("sucesso", true);
+            response.put("total", desempenhos.size());
+            response.put("desempenhos", desempenhos);
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("sucesso", false);
+            response.put("mensagem", "Erro ao listar desempenhos: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * GET /api/desempenho
+     * Lista todos os desempenhos
+     */
+    @GetMapping
+    public ResponseEntity<Map<String, Object>> listarTodos() {
+        try {
+            List<Desempenho> desempenhos = desempenhoService.buscarTodos();
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("sucesso", true);
+            response.put("total", desempenhos.size());
+            response.put("desempenhos", desempenhos);
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("sucesso", false);
+            response.put("mensagem", "Erro ao listar desempenhos: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * GET /api/desempenho/por-materia/{idUsuario}
+     * Retorna desempenho agregado por matéria de um usuário
+     */
+    @GetMapping("/por-materia/{idUsuario}")
+    public ResponseEntity<Map<String, Object>> buscarDesempenhoPorMateria(@PathVariable int idUsuario) {
+        try {
+            List<Map<String, Object>> desempenho = desempenhoService.buscarDesempenhoPorMateria(idUsuario);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("sucesso", true);
+            response.put("desempenhoPorMateria", desempenho);
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("sucesso", false);
+            response.put("mensagem", "Erro ao buscar desempenho por matéria: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * GET /api/desempenho/estatisticas/{idUsuario}/{idSimulado}
+     * Retorna estatísticas de um simulado específico
+     */
+    @GetMapping("/estatisticas/{idUsuario}/{idSimulado}")
+    public ResponseEntity<Map<String, Object>> buscarEstatisticasSimulado(
+            @PathVariable int idUsuario,
+            @PathVariable int idSimulado) {
+        try {
+            Map<String, Object> estatisticas = desempenhoService.buscarEstatisticasSimulado(idUsuario, idSimulado);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("sucesso", true);
+            response.putAll(estatisticas);
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("sucesso", false);
+            response.put("mensagem", "Erro ao buscar estatísticas: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * GET /api/desempenho/estatisticas-materia/{idUsuario}/{idSimulado}
+     * Retorna estatísticas por matéria de um simulado específico
+     */
+    @GetMapping("/estatisticas-materia/{idUsuario}/{idSimulado}")
+    public ResponseEntity<Map<String, Object>> buscarEstatisticasPorMateriaDoSimulado(
+            @PathVariable int idUsuario,
+            @PathVariable int idSimulado) {
+        try {
+            List<Map<String, Object>> estatisticas = desempenhoService.buscarEstatisticasPorMateriaDoSimulado(idUsuario, idSimulado);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("sucesso", true);
+            response.put("estatisticasPorMateria", estatisticas);
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("sucesso", false);
+            response.put("mensagem", "Erro ao buscar estatísticas por matéria: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * PUT /api/desempenho/{id}
+     * Atualiza um desempenho
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<Map<String, Object>> atualizar(
+            @PathVariable int id,
+            @RequestBody Map<String, Object> dados) {
+        try {
+            Desempenho desempenho = desempenhoService.buscarPorId(id);
+
+            if (dados.containsKey("idUsuario")) {
+                desempenho.setIdUsuario((Integer) dados.get("idUsuario"));
+            }
+
+            if (dados.containsKey("idCurso")) {
+                desempenho.setIdCurso((Integer) dados.get("idCurso"));
+            }
+
+            if (dados.containsKey("idMateria")) {
+                desempenho.setIdMateria((Integer) dados.get("idMateria"));
+            }
+
+            desempenhoService.atualizarDesempenho(desempenho);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("sucesso", true);
+            response.put("mensagem", "Desempenho atualizado com sucesso!");
+            response.put("desempenho", desempenho);
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("sucesso", false);
+            response.put("mensagem", "Erro ao atualizar desempenho: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
      * DELETE /api/desempenho/{id}
      * Deleta um desempenho
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deletarDesempenho(@PathVariable Integer id) {
+    public ResponseEntity<Map<String, Object>> deletar(@PathVariable int id) {
         try {
-            boolean deletado = desempenhoService.deletarDesempenho(id);
+            desempenhoService.deletarDesempenho(id);
 
-            if (deletado) {
-                Map<String, Object> response = new HashMap<>();
-                response.put("sucesso", true);
-                response.put("mensagem", "Desempenho deletado com sucesso!");
-                return ResponseEntity.ok(response);
-            } else {
-                Map<String, Object> response = new HashMap<>();
-                response.put("sucesso", false);
-                response.put("mensagem", "Falha ao deletar desempenho!");
-                return ResponseEntity.badRequest().body(response);
-            }
-
-        } catch (IllegalArgumentException e) {
             Map<String, Object> response = new HashMap<>();
-            response.put("sucesso", false);
-            response.put("mensagem", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            response.put("sucesso", true);
+            response.put("mensagem", "Desempenho deletado com sucesso!");
+
+            return ResponseEntity.ok(response);
 
         } catch (Exception e) {
             Map<String, Object> response = new HashMap<>();
@@ -302,4 +316,3 @@ public class DesempenhoController {
         }
     }
 }
-

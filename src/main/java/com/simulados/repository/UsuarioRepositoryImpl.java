@@ -4,178 +4,181 @@ import com.simulados.application.DatabaseConnection;
 import com.simulados.model.Usuario;
 
 import java.sql.*;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
-/**
- * Implementação Repository para operações CRUD da entidade Usuario usando JDBC puro
- */
 public class UsuarioRepositoryImpl implements UsuarioRepository {
 
-    private final Connection connection;
+    // Queries SQL
+    private static final String INSERT =
+            "INSERT INTO Usuario (nome, email, senha, tipo_usuario) VALUES (?, ?, ?, ?)";
 
-    // Construtor - obtém conexão do DatabaseConnection
-    public UsuarioRepositoryImpl() {
-        this.connection = DatabaseConnection.getInstance().getConnection();
-    }
+    private static final String SELECT_BY_ID =
+            "SELECT id_usuario, nome, email, senha, data_cadastro, tipo_usuario " +
+                    "FROM Usuario WHERE id_usuario = ?";
+
+    private static final String SELECT_BY_EMAIL =
+            "SELECT id_usuario, nome, email, senha, data_cadastro, tipo_usuario " +
+                    "FROM Usuario WHERE email = ?";
+
+    private static final String SELECT_ALL =
+            "SELECT id_usuario, nome, email, senha, data_cadastro, tipo_usuario " +
+                    "FROM Usuario ORDER BY nome";
+
+    private static final String SELECT_BY_TIPO =
+            "SELECT id_usuario, nome, email, senha, data_cadastro, tipo_usuario " +
+                    "FROM Usuario WHERE tipo_usuario = ? ORDER BY nome";
+
+    private static final String UPDATE =
+            "UPDATE Usuario SET nome = ?, email = ?, senha = ?, tipo_usuario = ? " +
+                    "WHERE id_usuario = ?";
+
+    private static final String DELETE =
+            "DELETE FROM Usuario WHERE id_usuario = ?";
+
+    private static final String EMAIL_EXISTS =
+            "SELECT COUNT(*) FROM Usuario WHERE email = ?";
 
     @Override
-    public Usuario salvar(Usuario usuario) {
-        String sql = "INSERT INTO usuario (nome, email, senha, data_cadastro) VALUES (?, ?, ?, ?) RETURNING id_usuario";
+    public void salvar(Usuario usuario) throws SQLException {
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(INSERT, Statement.RETURN_GENERATED_KEYS)) {
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, usuario.getNome());
             stmt.setString(2, usuario.getEmail());
             stmt.setString(3, usuario.getSenha());
-            stmt.setTimestamp(4, Timestamp.valueOf(LocalDateTime.now()));
+            stmt.setString(4, usuario.getTipoUsuario() != null ?
+                    usuario.getTipoUsuario() : Usuario.TIPO_ALUNO);
 
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                usuario.setIdUsuario(rs.getInt("id_usuario"));
-                return usuario;
+            stmt.executeUpdate();
+
+            // Recuperar ID gerado
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                if (rs.next()) {
+                    usuario.setIdUsuario(rs.getInt(1));
+                }
             }
-
-        } catch (SQLException e) {
-            System.err.println("Erro ao salvar usuário: " + e.getMessage());
-            e.printStackTrace();
         }
+    }
 
+    @Override
+    public Usuario buscarPorId(int id) throws SQLException {
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(SELECT_BY_ID)) {
+
+            stmt.setInt(1, id);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return construirUsuario(rs);
+                }
+            }
+        }
         return null;
     }
 
     @Override
-    public List<Usuario> buscarTodos() {
-        List<Usuario> usuarios = new ArrayList<>();
-        String sql = "SELECT * FROM usuario ORDER BY id_usuario";
+    public Usuario buscarPorEmail(String email) throws SQLException {
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(SELECT_BY_EMAIL)) {
 
-        try (Statement stmt = connection.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+            stmt.setString(1, email);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return construirUsuario(rs);
+                }
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public List<Usuario> buscarTodos() throws SQLException {
+        List<Usuario> usuarios = new ArrayList<>();
+
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(SELECT_ALL);
+             ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {
-                usuarios.add(mapearUsuario(rs));
+                usuarios.add(construirUsuario(rs));
             }
-
-        } catch (SQLException e) {
-            System.err.println("Erro ao buscar todos os usuários: " + e.getMessage());
-            e.printStackTrace();
         }
 
         return usuarios;
     }
 
     @Override
-    public Optional<Usuario> buscarPorId(Integer id) {
-        String sql = "SELECT * FROM usuario WHERE id_usuario = ?";
+    public List<Usuario> buscarPorTipo(String tipoUsuario) throws SQLException {
+        List<Usuario> usuarios = new ArrayList<>();
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, id);
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(SELECT_BY_TIPO)) {
 
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                return Optional.of(mapearUsuario(rs));
+            stmt.setString(1, tipoUsuario);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    usuarios.add(construirUsuario(rs));
+                }
             }
-
-        } catch (SQLException e) {
-            System.err.println("Erro ao buscar usuário por ID: " + e.getMessage());
-            e.printStackTrace();
         }
 
-        return Optional.empty();
+        return usuarios;
     }
 
     @Override
-    public Optional<Usuario> buscarPorEmail(String email) {
-        String sql = "SELECT * FROM usuario WHERE email = ?";
+    public void atualizar(Usuario usuario) throws SQLException {
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(UPDATE)) {
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, email);
-
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                return Optional.of(mapearUsuario(rs));
-            }
-
-        } catch (SQLException e) {
-            System.err.println("Erro ao buscar usuário por email: " + e.getMessage());
-            e.printStackTrace();
-        }
-
-        return Optional.empty();
-    }
-
-    @Override
-    public boolean atualizar(Usuario usuario) {
-        String sql = "UPDATE usuario SET nome = ?, email = ?, senha = ? WHERE id_usuario = ?";
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, usuario.getNome());
             stmt.setString(2, usuario.getEmail());
             stmt.setString(3, usuario.getSenha());
-            stmt.setInt(4, usuario.getIdUsuario());
+            stmt.setString(4, usuario.getTipoUsuario());
+            stmt.setInt(5, usuario.getIdUsuario());
 
-            int linhasAfetadas = stmt.executeUpdate();
-            return linhasAfetadas > 0;
-
-        } catch (SQLException e) {
-            System.err.println("Erro ao atualizar usuário: " + e.getMessage());
-            e.printStackTrace();
+            stmt.executeUpdate();
         }
-
-        return false;
     }
 
     @Override
-    public boolean deletar(Integer id) {
-        String sql = "DELETE FROM usuario WHERE id_usuario = ?";
+    public void deletar(int id) throws SQLException {
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(DELETE)) {
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, id);
-
-            int linhasAfetadas = stmt.executeUpdate();
-            return linhasAfetadas > 0;
-
-        } catch (SQLException e) {
-            System.err.println("Erro ao deletar usuário: " + e.getMessage());
-            e.printStackTrace();
+            stmt.executeUpdate();
         }
-
-        return false;
     }
 
     @Override
-    public int contarTodos() {
-        String sql = "SELECT COUNT(*) as total FROM usuario";
+    public boolean emailExiste(String email) throws SQLException {
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(EMAIL_EXISTS)) {
 
-        try (Statement stmt = connection.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+            stmt.setString(1, email);
 
-            if (rs.next()) {
-                return rs.getInt("total");
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
             }
-
-        } catch (SQLException e) {
-            System.err.println("Erro ao contar usuários: " + e.getMessage());
-            e.printStackTrace();
         }
-
-        return 0;
+        return false;
     }
 
-    // Método auxiliar para mapear ResultSet em objeto Usuario
-    private Usuario mapearUsuario(ResultSet rs) throws SQLException {
+    // Método auxiliar para construir objeto Usuario a partir do ResultSet
+    private Usuario construirUsuario(ResultSet rs) throws SQLException {
         Usuario usuario = new Usuario();
         usuario.setIdUsuario(rs.getInt("id_usuario"));
         usuario.setNome(rs.getString("nome"));
         usuario.setEmail(rs.getString("email"));
         usuario.setSenha(rs.getString("senha"));
-
-        Timestamp timestamp = rs.getTimestamp("data_cadastro");
-        if (timestamp != null) {
-            usuario.setDataCadastro(timestamp.toLocalDateTime());
-        }
-
+        usuario.setDataCadastro(rs.getTimestamp("data_cadastro"));
+        usuario.setTipoUsuario(rs.getString("tipo_usuario"));
         return usuario;
     }
 }
+

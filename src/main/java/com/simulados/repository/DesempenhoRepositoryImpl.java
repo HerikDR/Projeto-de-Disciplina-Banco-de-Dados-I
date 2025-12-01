@@ -16,7 +16,7 @@ public class DesempenhoRepositoryImpl implements DesempenhoRepository {
     private final Connection connection;
 
     // Construtor - obtém conexão do DatabaseConnection
-    public DesempenhoRepositoryImpl() {
+    public DesempenhoRepositoryImpl() throws SQLException {
         this.connection = DatabaseConnection.getInstance().getConnection();
     }
 

@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,18 +22,18 @@ public class RespostaController {
 
     private final RespostaService respostaService;
 
-    // Construtor - instancia o service
-    public RespostaController() {
+    // construtor - instancia o service
+    public RespostaController() throws SQLException {
         this.respostaService = new RespostaService();
     }
 
     /**
      * POST /api/respostas/registrar
-     * Registra a resposta de um usuário para uma questão
+     * registra a resposta de um usuário para uma questão
      * Body: { "idSimulado": 1, "idQuestao": 5, "idUsuario": 1, "respostaFornecida": "A" }
      */
     @PostMapping("/registrar")
-    public ResponseEntity<?> registrarResposta(@RequestBody Map<String, Object> dados) {
+    public ResponseEntity<Map<String, Object>> registrarResposta(@RequestBody Map<String, Object> dados) {
         try {
             Integer idSimulado = (Integer) dados.get("idSimulado");
             Integer idQuestao = (Integer) dados.get("idQuestao");
@@ -65,12 +66,13 @@ public class RespostaController {
     }
 
     /**
-     * POST /api/respostas/corrigir/{idSimulado}
-     * Corrige um simulado e retorna o resultado completo
-     * Retorna: acertos, erros, nota, percentual, detalhes por questão
+     * GET /api/respostas/corrigir/{idSimulado}
+     * ⚠️ CORRIGIDO: MUDADO DE POST PARA GET
+     * corrige um simulado e retorna o resultado completo
+     * retorna: acertos, erros, nota, percentual, detalhes por questão
      */
-    @PostMapping("/corrigir/{idSimulado}")
-    public ResponseEntity<?> corrigirSimulado(@PathVariable Integer idSimulado) {
+    @GetMapping("/corrigir/{idSimulado}")
+    public ResponseEntity<Map<String, Object>> corrigirSimulado(@PathVariable Integer idSimulado) {
         try {
             Map<String, Object> resultado = respostaService.corrigirSimulado(idSimulado);
 
@@ -97,10 +99,10 @@ public class RespostaController {
 
     /**
      * GET /api/respostas/desempenho-materia/{idSimulado}
-     * Calcula desempenho por matéria em um simulado
+     * calcula desempenho por matéria em um simulado
      */
     @GetMapping("/desempenho-materia/{idSimulado}")
-    public ResponseEntity<?> calcularDesempenhoPorMateria(@PathVariable Integer idSimulado) {
+    public ResponseEntity<Map<String, Object>> calcularDesempenhoPorMateria(@PathVariable Integer idSimulado) {
         try {
             Map<Integer, Map<String, Integer>> desempenho =
                     respostaService.calcularDesempenhoPorMateria(idSimulado);
@@ -127,10 +129,10 @@ public class RespostaController {
 
     /**
      * GET /api/respostas/simulado/{idSimulado}
-     * Lista todas as respostas de um simulado
+     * lista todas as respostas de um simulado
      */
     @GetMapping("/simulado/{idSimulado}")
-    public ResponseEntity<?> listarRespostasPorSimulado(@PathVariable Integer idSimulado) {
+    public ResponseEntity<Map<String, Object>> listarRespostasPorSimulado(@PathVariable Integer idSimulado) {
         try {
             List<RespostaUsuario> respostas = respostaService.listarRespostasPorSimulado(idSimulado);
 
@@ -157,10 +159,10 @@ public class RespostaController {
 
     /**
      * GET /api/respostas/usuario/{idUsuario}
-     * Lista todas as respostas de um usuário
+     * lista todas as respostas de um usuário
      */
     @GetMapping("/usuario/{idUsuario}")
-    public ResponseEntity<?> listarRespostasPorUsuario(@PathVariable Integer idUsuario) {
+    public ResponseEntity<Map<String, Object>> listarRespostasPorUsuario(@PathVariable Integer idUsuario) {
         try {
             List<RespostaUsuario> respostas = respostaService.listarRespostasPorUsuario(idUsuario);
 
@@ -187,10 +189,10 @@ public class RespostaController {
 
     /**
      * DELETE /api/respostas/{id}
-     * Deleta uma resposta específica
+     * deleta uma resposta específica
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deletarResposta(@PathVariable Integer id) {
+    public ResponseEntity<Map<String, Object>> deletarResposta(@PathVariable Integer id) {
         try {
             boolean deletado = respostaService.deletarResposta(id);
 
@@ -222,10 +224,10 @@ public class RespostaController {
 
     /**
      * DELETE /api/respostas/simulado/{idSimulado}
-     * Deleta todas as respostas de um simulado (reset)
+     * deleta todas as respostas de um simulado (reset)
      */
     @DeleteMapping("/simulado/{idSimulado}")
-    public ResponseEntity<?> deletarRespostasPorSimulado(@PathVariable Integer idSimulado) {
+    public ResponseEntity<Map<String, Object>> deletarRespostasPorSimulado(@PathVariable Integer idSimulado) {
         try {
             boolean deletado = respostaService.deletarRespostasPorSimulado(idSimulado);
 
@@ -257,10 +259,10 @@ public class RespostaController {
 
     /**
      * GET /api/respostas/simulado/{idSimulado}/total
-     * Conta quantas respostas foram registradas em um simulado
+     * conta quantas respostas foram registradas em um simulado
      */
     @GetMapping("/simulado/{idSimulado}/total")
-    public ResponseEntity<?> contarRespostasPorSimulado(@PathVariable Integer idSimulado) {
+    public ResponseEntity<Map<String, Object>> contarRespostasPorSimulado(@PathVariable Integer idSimulado) {
         try {
             int total = respostaService.contarRespostasPorSimulado(idSimulado);
 

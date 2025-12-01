@@ -3,111 +3,270 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Simulados - Login</title>
-    <link rel="stylesheet" href="css/style.css">
+    <title>login - plataforma de simulados</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #eee;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 0.8rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            color: #333;
+            border-bottom-color: #333;
+            font-weight: bold;
+        }
+
+        .form-container {
+            display: none;
+        }
+
+        .form-container.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-size: 0.9rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.95rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #333;
+        }
+
+        button[type="submit"] {
+            width: 100%;
+            padding: 0.8rem;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #555;
+        }
+
+        button[type="submit"]:disabled {
+            background-color: #999;
+            cursor: not-allowed;
+        }
+
+        .message {
+            padding: 0.8rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .message.show {
+            display: block;
+        }
+    </style>
 </head>
 <body>
-<header>
-    <h1>Sistema de Simulados</h1>
-</header>
-
 <div class="container">
-    <!-- Mensagens de erro/sucesso -->
-    <div id="mensagem" class="mensagem hidden"></div>
+    <h1>plataforma de simulados</h1>
+    <p class="subtitle">faça login ou crie sua conta</p>
 
-    <!-- Card de Login -->
-    <div id="login-card" class="card">
-        <h2>Login</h2>
-        <form id="login-form">
-            <div class="form-group">
-                <label for="login-email">Email:</label>
-                <input type="email" id="login-email" required>
-            </div>
-            <div class="form-group">
-                <label for="login-senha">Senha:</label>
-                <input type="password" id="login-senha" required>
-            </div>
-            <button type="submit" class="btn btn-full">Entrar</button>
-        </form>
-        <p class="text-center mt-20">
-            Não tem conta?
-            <a href="#" id="mostrar-cadastro">Cadastre-se aqui</a>
-        </p>
+    <div class="tabs">
+        <button class="tab active" onclick="mostrarTab('login')">login</button>
+        <button class="tab" onclick="mostrarTab('registro')">registro</button>
     </div>
 
-    <!-- Card de Cadastro (inicialmente oculto) -->
-    <div id="cadastro-card" class="card hidden">
-        <h2>Cadastro</h2>
-        <form id="cadastro-form">
+    <div id="messageContainer" class="message"></div>
+
+    <!-- Formulário de Login -->
+    <div id="loginForm" class="form-container active">
+        <form onsubmit="fazerLogin(event)">
             <div class="form-group">
-                <label for="cadastro-nome">Nome Completo:</label>
-                <input type="text" id="cadastro-nome" required>
+                <label for="loginEmail">email</label>
+                <input type="email" id="loginEmail" required>
             </div>
             <div class="form-group">
-                <label for="cadastro-email">Email:</label>
-                <input type="email" id="cadastro-email" required>
+                <label for="loginSenha">senha</label>
+                <input type="password" id="loginSenha" required>
             </div>
-            <div class="form-group">
-                <label for="cadastro-senha">Senha (mínimo 6 caracteres):</label>
-                <input type="password" id="cadastro-senha" minlength="6" required>
-            </div>
-            <div class="form-group">
-                <label for="cadastro-confirma-senha">Confirmar Senha:</label>
-                <input type="password" id="cadastro-confirma-senha" minlength="6" required>
-            </div>
-            <button type="submit" class="btn btn-full">Cadastrar</button>
+            <button type="submit" id="btnLogin">entrar</button>
         </form>
-        <p class="text-center mt-20">
-            Já tem conta?
-            <a href="#" id="mostrar-login">Faça login aqui</a>
-        </p>
+    </div>
+
+    <!-- Formulário de Registro -->
+    <div id="registroForm" class="form-container">
+        <form onsubmit="fazerRegistro(event)">
+            <div class="form-group">
+                <label for="registroNome">nome completo</label>
+                <input type="text" id="registroNome" required>
+            </div>
+            <div class="form-group">
+                <label for="registroEmail">email</label>
+                <input type="email" id="registroEmail" required>
+            </div>
+            <div class="form-group">
+                <label for="registroSenha">senha</label>
+                <input type="password" id="registroSenha" required minlength="6">
+            </div>
+            <div class="form-group">
+                <label for="registroCurso">curso</label>
+                <select id="registroCurso" required>
+                    <option value="">selecione um curso</option>
+                </select>
+            </div>
+            <button type="submit" id="btnRegistro">criar conta</button>
+        </form>
     </div>
 </div>
 
 <script>
-    // URL base da API
     const API_URL = 'http://localhost:8080/api';
 
-    // Elementos do DOM
-    const loginCard = document.getElementById('login-card');
-    const cadastroCard = document.getElementById('cadastro-card');
-    const loginForm = document.getElementById('login-form');
-    const cadastroForm = document.getElementById('cadastro-form');
-    const mensagemDiv = document.getElementById('mensagem');
+    // carregar cursos ao iniciar
+    window.addEventListener('DOMContentLoaded', () => {
+        carregarCursos();
 
-    // Alternar entre login e cadastro
-    document.getElementById('mostrar-cadastro').addEventListener('click', (e) => {
-        e.preventDefault();
-        loginCard.classList.add('hidden');
-        cadastroCard.classList.remove('hidden');
-        limparMensagem();
+        // verificar se já está logado
+        const usuario = sessionStorage.getItem('usuarioLogado');
+        if (usuario) {
+            window.location.href = 'home.html';
+        }
     });
 
-    document.getElementById('mostrar-login').addEventListener('click', (e) => {
-        e.preventDefault();
-        cadastroCard.classList.add('hidden');
-        loginCard.classList.remove('hidden');
-        limparMensagem();
-    });
+    // função para alternar tabs
+    function mostrarTab(tab) {
+        // atualizar tabs
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        event.target.classList.add('active');
 
-    // Função para exibir mensagens
-    function mostrarMensagem(mensagem, tipo) {
-        mensagemDiv.textContent = mensagem;
-        mensagemDiv.className = `mensagem mensagem-${tipo}`;
-        mensagemDiv.classList.remove('hidden');
+        // atualizar formulários
+        document.querySelectorAll('.form-container').forEach(f => f.classList.remove('active'));
+        if (tab === 'login') {
+            document.getElementById('loginForm').classList.add('active');
+        } else {
+            document.getElementById('registroForm').classList.add('active');
+        }
+
+        // limpar mensagem
+        esconderMensagem();
     }
 
-    function limparMensagem() {
-        mensagemDiv.classList.add('hidden');
+    // função para carregar cursos
+    async function carregarCursos() {
+        try {
+            const response = await fetch(`${API_URL}/cursos`);
+            const data = await response.json();
+
+            const select = document.getElementById('registroCurso');
+
+            if (data.sucesso && data.cursos) {
+                data.cursos.forEach(curso => {
+                    const option = document.createElement('option');
+                    option.value = curso.idCurso;
+                    option.textContent = curso.nome;
+                    select.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('erro ao carregar cursos:', error);
+            mostrarMensagem('erro ao carregar cursos. verifique se o backend está rodando.', 'error');
+        }
     }
 
-    // Handler do formulário de LOGIN
-    loginForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        limparMensagem();
+    // função para fazer login
+    async function fazerLogin(event) {
+        event.preventDefault();
 
-        const email = document.getElementById('login-email').value;
-        const senha = document.getElementById('login-senha').value;
+        const email = document.getElementById('loginEmail').value;
+        const senha = document.getElementById('loginSenha').value;
+        const btnLogin = document.getElementById('btnLogin');
+
+        btnLogin.disabled = true;
+        btnLogin.textContent = 'entrando...';
+        esconderMensagem();
 
         try {
             const response = await fetch(`${API_URL}/usuarios/login`, {
@@ -120,35 +279,45 @@
 
             const data = await response.json();
 
-            if (data.sucesso) {
-                // Salva dados do usuário no localStorage
-                localStorage.setItem('usuario', JSON.stringify(data.usuario));
-                // Redireciona para home
-                window.location.href = 'home.html';
+            if (data.sucesso && data.usuario) {
+                // salvar usuário no sessionStorage
+                sessionStorage.setItem('usuarioLogado', JSON.stringify(data.usuario));
+
+                mostrarMensagem('login realizado com sucesso!', 'success');
+
+                // redirecionar para home após 500ms
+                setTimeout(() => {
+                    window.location.href = 'home.html';
+                }, 500);
             } else {
-                mostrarMensagem(data.mensagem, 'erro');
+                throw new Error(data.mensagem || 'email ou senha incorretos');
             }
         } catch (error) {
-            mostrarMensagem('Erro ao conectar com o servidor. Verifique se o backend está rodando.', 'erro');
-            console.error('Erro:', error);
+            console.error('erro no login:', error);
+            mostrarMensagem(error.message, 'error');
+            btnLogin.disabled = false;
+            btnLogin.textContent = 'entrar';
         }
-    });
+    }
 
-    // Handler do formulário de CADASTRO
-    cadastroForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        limparMensagem();
+    // função para fazer registro
+    async function fazerRegistro(event) {
+        event.preventDefault();
 
-        const nome = document.getElementById('cadastro-nome').value;
-        const email = document.getElementById('cadastro-email').value;
-        const senha = document.getElementById('cadastro-senha').value;
-        const confirmaSenha = document.getElementById('cadastro-confirma-senha').value;
+        const nome = document.getElementById('registroNome').value;
+        const email = document.getElementById('registroEmail').value;
+        const senha = document.getElementById('registroSenha').value;
+        const idCurso = parseInt(document.getElementById('registroCurso').value);
+        const btnRegistro = document.getElementById('btnRegistro');
 
-        // Validação: senhas coincidem?
-        if (senha !== confirmaSenha) {
-            mostrarMensagem('As senhas não coincidem!', 'erro');
+        if (!idCurso) {
+            mostrarMensagem('selecione um curso', 'error');
             return;
         }
+
+        btnRegistro.disabled = true;
+        btnRegistro.textContent = 'criando conta...';
+        esconderMensagem();
 
         try {
             const response = await fetch(`${API_URL}/usuarios/cadastrar`, {
@@ -156,29 +325,54 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ nome, email, senha })
+                body: JSON.stringify({
+                    nome,
+                    email,
+                    senha,
+                    idCurso,
+                    tipo: 'aluno' // tipo padrão
+                })
             });
 
             const data = await response.json();
 
             if (data.sucesso) {
-                mostrarMensagem('Cadastro realizado com sucesso! Faça login.', 'sucesso');
-                // Limpa o formulário
-                cadastroForm.reset();
-                // Volta para o login após 2 segundos
+                mostrarMensagem('conta criada com sucesso! faça login.', 'success');
+
+                // limpar formulário
+                document.getElementById('registroNome').value = '';
+                document.getElementById('registroEmail').value = '';
+                document.getElementById('registroSenha').value = '';
+                document.getElementById('registroCurso').value = '';
+
+                // mudar para tab de login após 2s
                 setTimeout(() => {
-                    cadastroCard.classList.add('hidden');
-                    loginCard.classList.remove('hidden');
-                    limparMensagem();
+                    document.querySelector('.tab').click();
                 }, 2000);
             } else {
-                mostrarMensagem(data.mensagem, 'erro');
+                throw new Error(data.mensagem || 'erro ao criar conta');
             }
         } catch (error) {
-            mostrarMensagem('Erro ao conectar com o servidor. Verifique se o backend está rodando.', 'erro');
-            console.error('Erro:', error);
+            console.error('erro no registro:', error);
+            mostrarMensagem(error.message, 'error');
+        } finally {
+            btnRegistro.disabled = false;
+            btnRegistro.textContent = 'criar conta';
         }
-    });
+    }
+
+    // função para mostrar mensagem
+    function mostrarMensagem(texto, tipo) {
+        const container = document.getElementById('messageContainer');
+        container.textContent = texto;
+        container.className = `message ${tipo} show`;
+    }
+
+    // função para esconder mensagem
+    function esconderMensagem() {
+        const container = document.getElementById('messageContainer');
+        container.className = 'message';
+    }
 </script>
 </body>
 </html>

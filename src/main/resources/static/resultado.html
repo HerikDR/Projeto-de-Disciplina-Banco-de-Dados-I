@@ -3,158 +3,468 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Simulados - Resultado</title>
-    <link rel="stylesheet" href="css/style.css">
+    <title>resultado do simulado - plataforma de simulados</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .navbar {
+            background-color: #fff;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar h1 {
+            font-size: 1.5rem;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .resultado-header {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .resultado-header h2 {
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .resumo-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .resumo-card {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .resumo-card h3 {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .resumo-card .valor {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .resumo-card.nota .valor {
+            color: #2a7d2e;
+        }
+
+        .resumo-card.acertos .valor {
+            color: #2a7d2e;
+        }
+
+        .resumo-card.erros .valor {
+            color: #c33;
+        }
+
+        .detalhes-section {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .detalhes-section h3 {
+            margin-bottom: 1.5rem;
+            color: #333;
+            font-size: 1.3rem;
+        }
+
+        .questao-detalhe {
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #ddd;
+            background-color: #fafafa;
+            border-radius: 4px;
+        }
+
+        .questao-detalhe.acertou {
+            border-left-color: #2a7d2e;
+            background-color: #f0f8f0;
+        }
+
+        .questao-detalhe.errou {
+            border-left-color: #c33;
+            background-color: #fff0f0;
+        }
+
+        .questao-detalhe-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .questao-numero-detalhe {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .status-badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        .status-badge.correto {
+            background-color: #2a7d2e;
+            color: white;
+        }
+
+        .status-badge.incorreto {
+            background-color: #c33;
+            color: white;
+        }
+
+        .questao-enunciado-detalhe {
+            margin: 1rem 0;
+            color: #333;
+            font-size: 0.95rem;
+        }
+
+        .resposta-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #ddd;
+        }
+
+        .resposta-info-item {
+            font-size: 0.9rem;
+        }
+
+        .resposta-info-item strong {
+            display: block;
+            margin-bottom: 0.3rem;
+            color: #666;
+        }
+
+        .resposta-info-item .resposta-valor {
+            font-size: 1.1rem;
+            font-weight: bold;
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .resposta-usuario {
+            background-color: #e0e0e0;
+            color: #333;
+        }
+
+        .resposta-correta {
+            background-color: #2a7d2e;
+            color: white;
+        }
+
+        .actions {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        button {
+            background-color: #333;
+            color: white;
+            border: none;
+            padding: 0.8rem 2rem;
+            cursor: pointer;
+            font-size: 1rem;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #555;
+        }
+
+        button.secondary {
+            background-color: #666;
+        }
+
+        button.secondary:hover {
+            background-color: #777;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .error-message {
+            background-color: #fee;
+            color: #c33;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 2rem 0;
+            text-align: center;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background-color: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 1.5rem 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: #2a7d2e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9rem;
+            transition: width 0.5s ease;
+        }
+
+        .materia-badge {
+            display: inline-block;
+            background-color: #333;
+            color: white;
+            padding: 0.2rem 0.6rem;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            margin-left: 0.5rem;
+        }
+    </style>
 </head>
 <body>
-<header>
-    <h1>Sistema de Simulados</h1>
-</header>
+<nav class="navbar">
+    <h1>plataforma de simulados</h1>
+    <button onclick="voltarHome()">voltar para home</button>
+</nav>
 
 <div class="container">
-    <!-- Card de Resultado -->
-    <div class="resultado-summary">
-        <h2>Simulado Finalizado!</h2>
-        <p>Confira seu desempenho abaixo:</p>
+    <div class="resultado-header">
+        <h2>resultado do simulado</h2>
+        <p id="simuladoInfo">simulado #<span id="idSimulado">...</span></p>
+    </div>
 
-        <!-- Estatísticas -->
-        <div class="resultado-stats">
-            <div class="stat-box">
-                <div class="stat-number" id="total-questoes">0</div>
-                <div class="stat-label">Total de Questões</div>
+    <div id="loadingContainer" class="loading">
+        carregando resultado...
+    </div>
+
+    <div id="resultadoContainer" style="display: none;">
+        <!-- Resumo -->
+        <div class="resumo-cards">
+            <div class="resumo-card nota">
+                <h3>nota final</h3>
+                <div class="valor" id="notaFinal">-</div>
             </div>
-            <div class="stat-box">
-                <div class="stat-number" id="acertos">0</div>
-                <div class="stat-label">Acertos</div>
+            <div class="resumo-card acertos">
+                <h3>acertos</h3>
+                <div class="valor" id="totalAcertos">-</div>
             </div>
-            <div class="stat-box">
-                <div class="stat-number" id="erros">0</div>
-                <div class="stat-label">Erros</div>
+            <div class="resumo-card erros">
+                <h3>erros</h3>
+                <div class="valor" id="totalErros">-</div>
+            </div>
+            <div class="resumo-card">
+                <h3>percentual</h3>
+                <div class="valor" id="percentualAcerto">-</div>
             </div>
         </div>
 
-        <!-- Nota e Percentual -->
-        <div style="margin-top: 30px;">
-            <p style="font-size: 20px; margin-bottom: 10px;">
-                <strong>Nota:</strong> <span id="nota">0</span>/10
-            </p>
-            <p style="font-size: 18px; color: #666;">
-                <strong>Percentual de Acerto:</strong> <span id="percentual">0%</span>
-            </p>
+        <!-- Barra de progresso -->
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width: 0%">0%</div>
         </div>
-    </div>
 
-    <!-- Detalhes das Questões -->
-    <div class="card">
-        <h2>Detalhes das Questões</h2>
-        <p style="margin-bottom: 20px;">Veja quais questões você acertou e errou:</p>
-        <div id="detalhes-container"></div>
-    </div>
+        <!-- Detalhes das questões -->
+        <div class="detalhes-section">
+            <h3>detalhes por questão</h3>
+            <div id="detalhesQuestoes"></div>
+        </div>
 
-    <!-- Botões de Ação -->
-    <div class="card text-center">
-        <button id="btn-novo-simulado" class="btn btn-large">
-            Fazer Novo Simulado
-        </button>
-        <button id="btn-voltar-home" class="btn btn-secondary">
-            Voltar para Home
-        </button>
+        <!-- Ações -->
+        <div class="actions">
+            <button onclick="voltarHome()">voltar para home</button>
+            <button class="secondary" onclick="verDesempenho()">ver desempenho geral</button>
+        </div>
     </div>
 </div>
 
 <script>
-    // Elementos do DOM
-    const totalQuestoesSpan = document.getElementById('total-questoes');
-    const acertosSpan = document.getElementById('acertos');
-    const errosSpan = document.getElementById('erros');
-    const notaSpan = document.getElementById('nota');
-    const percentualSpan = document.getElementById('percentual');
-    const detalhesContainer = document.getElementById('detalhes-container');
-    const btnNovoSimulado = document.getElementById('btn-novo-simulado');
-    const btnVoltarHome = document.getElementById('btn-voltar-home');
+    const API_URL = 'http://localhost:8080/api';
+    let resultadoData = null;
 
-    // Recupera resultado do localStorage
-    const resultado = JSON.parse(localStorage.getItem('resultado'));
-    const usuarioLogado = JSON.parse(localStorage.getItem('usuario'));
+    // carregar resultado ao iniciar página
+    window.addEventListener('DOMContentLoaded', () => {
+        carregarResultado();
+    });
 
-    // Verifica se tem resultado
-    if (!resultado || !usuarioLogado) {
-        alert('Erro: resultado não encontrado. Voltando para home.');
-        window.location.href = 'home.html';
-    }
+    // função para carregar resultado do simulado
+    async function carregarResultado() {
+        // buscar id do simulado
+        let idSimulado = sessionStorage.getItem('idSimuladoResultado');
 
-    // Exibe estatísticas
-    totalQuestoesSpan.textContent = resultado.totalQuestoes;
-    acertosSpan.textContent = resultado.acertos;
-    errosSpan.textContent = resultado.erros;
-    notaSpan.textContent = resultado.nota;
-    percentualSpan.textContent = resultado.percentual;
+        // verificar também na URL (caso tenha vindo de link direto)
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('id')) {
+            idSimulado = urlParams.get('id');
+        }
 
-    // Renderiza detalhes das questões
-    function renderizarDetalhes() {
-        detalhesContainer.innerHTML = '';
+        if (!idSimulado) {
+            mostrarErro('id do simulado não encontrado. voltando para home...');
+            setTimeout(() => {
+                window.location.href = 'home.html';
+            }, 2000);
+            return;
+        }
 
-        if (resultado.detalhesQuestoes && resultado.detalhesQuestoes.length > 0) {
-            resultado.detalhesQuestoes.forEach((detalhe, index) => {
-                const detalhesDiv = document.createElement('div');
-                detalhesDiv.className = 'questao';
+        // atualizar header
+        document.getElementById('idSimulado').textContent = idSimulado;
 
-                const statusTexto = detalhe.acertou ? '✓ ACERTOU' : '✗ ERROU';
-                const statusCor = detalhe.acertou ? '#333' : '#666';
+        try {
+            // buscar resultado via API
+            const response = await fetch(`${API_URL}/respostas/corrigir/${idSimulado}`);
+            const data = await response.json();
 
-                detalhesDiv.innerHTML = `
-                        <div class="questao-numero">
-                            Questão ${index + 1} -
-                            <span style="font-weight: bold; color: ${statusCor};">${statusTexto}</span>
-                        </div>
-                        <div class="questao-enunciado" style="font-size: 16px; margin-bottom: 15px;">
-                            ${detalhe.enunciado}
-                        </div>
-                        <div style="margin-top: 10px;">
-                            <p style="margin-bottom: 5px;">
-                                <strong>Sua resposta:</strong>
-                                <span style="color: ${detalhe.acertou ? '#333' : '#999'};">
-                                    ${detalhe.respostaUsuario}
-                                </span>
-                            </p>
-                            ${!detalhe.acertou ? `
-                                <p style="margin-bottom: 5px;">
-                                    <strong>Resposta correta:</strong>
-                                    <span style="color: #333;">
-                                        ${detalhe.respostaCorreta}
-                                    </span>
-                                </p>
-                            ` : ''}
-                        </div>
-                    `;
+            if (!response.ok || !data.idSimulado) {
+                throw new Error(data.mensagem || 'erro ao buscar resultado');
+            }
 
-                detalhesContainer.appendChild(detalhesDiv);
-            });
-        } else {
-            detalhesContainer.innerHTML = '<p>Detalhes das questões não disponíveis.</p>';
+            resultadoData = data;
+            exibirResultado();
+
+        } catch (error) {
+            console.error('erro ao carregar resultado:', error);
+            mostrarErro('erro ao carregar resultado: ' + error.message);
         }
     }
 
-    // Renderiza os detalhes
-    renderizarDetalhes();
+    // função para exibir resultado na página
+    function exibirResultado() {
+        // esconder loading
+        document.getElementById('loadingContainer').style.display = 'none';
+        document.getElementById('resultadoContainer').style.display = 'block';
 
-    // Handler do botão "Fazer Novo Simulado"
-    btnNovoSimulado.addEventListener('click', () => {
-        // Limpa dados antigos
-        localStorage.removeItem('simuladoAtual');
-        localStorage.removeItem('resultado');
-        // Volta para home
-        window.location.href = 'home.html';
-    });
+        // preencher resumo
+        document.getElementById('notaFinal').textContent = resultadoData.nota || '0.00';
+        document.getElementById('totalAcertos').textContent = resultadoData.acertos || 0;
+        document.getElementById('totalErros').textContent = resultadoData.erros || 0;
+        document.getElementById('percentualAcerto').textContent = resultadoData.percentual || '0%';
 
-    // Handler do botão "Voltar para Home"
-    btnVoltarHome.addEventListener('click', () => {
-        // Limpa dados antigos
-        localStorage.removeItem('simuladoAtual');
-        localStorage.removeItem('resultado');
-        // Volta para home
+        // atualizar barra de progresso
+        const percentualNum = parseFloat(resultadoData.percentual) || 0;
+        const progressBar = document.getElementById('progressFill');
+        setTimeout(() => {
+            progressBar.style.width = percentualNum + '%';
+            progressBar.textContent = resultadoData.percentual || '0%';
+        }, 100);
+
+        // exibir detalhes das questões
+        exibirDetalhesQuestoes();
+    }
+
+    // função para exibir detalhes de cada questão
+    function exibirDetalhesQuestoes() {
+        const container = document.getElementById('detalhesQuestoes');
+        container.innerHTML = '';
+
+        if (!resultadoData.detalhesQuestoes || resultadoData.detalhesQuestoes.length === 0) {
+            container.innerHTML = '<p style="text-align: center; color: #666;">nenhum detalhe disponível</p>';
+            return;
+        }
+
+        resultadoData.detalhesQuestoes.forEach((detalhe, index) => {
+            const questaoDiv = document.createElement('div');
+            questaoDiv.className = `questao-detalhe ${detalhe.acertou ? 'acertou' : 'errou'}`;
+
+            questaoDiv.innerHTML = `
+                    <div class="questao-detalhe-header">
+                        <span class="questao-numero-detalhe">
+                            questão ${index + 1}
+                            ${detalhe.nomeMateria ? '<span class="materia-badge">' + detalhe.nomeMateria + '</span>' : ''}
+                        </span>
+                        <span class="status-badge ${detalhe.acertou ? 'correto' : 'incorreto'}">
+                            ${detalhe.acertou ? '✓ correto' : '✗ incorreto'}
+                        </span>
+                    </div>
+                    <div class="questao-enunciado-detalhe">
+                        ${detalhe.enunciado || 'enunciado não disponível'}
+                    </div>
+                    <div class="resposta-info">
+                        <div class="resposta-info-item">
+                            <strong>sua resposta:</strong>
+                            <span class="resposta-valor resposta-usuario">${detalhe.respostaUsuario || 'N'}</span>
+                        </div>
+                        <div class="resposta-info-item">
+                            <strong>resposta correta:</strong>
+                            <span class="resposta-valor resposta-correta">${detalhe.respostaCorreta || '-'}</span>
+                        </div>
+                    </div>
+                `;
+
+            container.appendChild(questaoDiv);
+        });
+    }
+
+    // função para mostrar erro
+    function mostrarErro(mensagem) {
+        document.getElementById('loadingContainer').innerHTML =
+            `<div class="error-message">${mensagem}</div>`;
+    }
+
+    // função para voltar à home
+    function voltarHome() {
+        // limpar session storage
+        sessionStorage.removeItem('idSimuladoResultado');
+        sessionStorage.removeItem('simuladoAtual');
         window.location.href = 'home.html';
-    });
+    }
+
+    // função para ver desempenho geral
+    function verDesempenho() {
+        window.location.href = 'desempenho.html';
+    }
 </script>
 </body>
 </html>

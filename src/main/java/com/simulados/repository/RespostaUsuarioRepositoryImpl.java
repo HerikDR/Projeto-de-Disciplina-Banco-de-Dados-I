@@ -17,7 +17,7 @@ public class RespostaUsuarioRepositoryImpl implements RespostaUsuarioRepository 
     private final Connection connection;
 
     // Construtor - obtém conexão do DatabaseConnection
-    public RespostaUsuarioRepositoryImpl() {
+    public RespostaUsuarioRepositoryImpl() throws SQLException {
         this.connection = DatabaseConnection.getInstance().getConnection();
     }
 

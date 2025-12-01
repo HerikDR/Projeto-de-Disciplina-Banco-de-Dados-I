@@ -3,183 +3,567 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Simulados - Realizando Simulado</title>
-    <link rel="stylesheet" href="css/style.css">
+    <title>realizando simulado - plataforma de simulados</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .navbar {
+            background-color: #fff;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar h1 {
+            font-size: 1.5rem;
+            color: #333;
+        }
+
+        .progress-info {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+            color: #666;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .simulado-header {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .simulado-header h2 {
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .simulado-header p {
+            color: #666;
+        }
+
+        .questao-card {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .questao-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #eee;
+        }
+
+        .questao-numero {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #333;
+        }
+
+        .questao-materia {
+            background-color: #333;
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        .questao-enunciado {
+            margin: 1.5rem 0;
+            font-size: 1.05rem;
+            line-height: 1.8;
+            color: #333;
+        }
+
+        .alternativas {
+            margin-top: 1.5rem;
+        }
+
+        .alternativa-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 1rem;
+            margin-bottom: 0.8rem;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .alternativa-item:hover {
+            border-color: #666;
+            background-color: #fafafa;
+        }
+
+        .alternativa-item.selecionada {
+            border-color: #333;
+            background-color: #f0f0f0;
+        }
+
+        .alternativa-item input[type="radio"] {
+            margin-right: 1rem;
+            margin-top: 0.2rem;
+            cursor: pointer;
+        }
+
+        .alternativa-texto {
+            flex: 1;
+            cursor: pointer;
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+
+        .navigation-buttons {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        button {
+            background-color: #333;
+            color: white;
+            border: none;
+            padding: 0.8rem 2rem;
+            cursor: pointer;
+            font-size: 1rem;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #555;
+        }
+
+        button:disabled {
+            background-color: #999;
+            cursor: not-allowed;
+        }
+
+        button.secondary {
+            background-color: #666;
+        }
+
+        button.secondary:hover {
+            background-color: #777;
+        }
+
+        .finalizar-btn {
+            background-color: #2a7d2e;
+        }
+
+        .finalizar-btn:hover {
+            background-color: #236b26;
+        }
+
+        .error-message {
+            background-color: #fee;
+            color: #c33;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 2rem 0;
+            text-align: center;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .questao-card.hidden {
+            display: none;
+        }
+
+        .resumo-section {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .resumo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .resumo-item {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .resumo-item:hover {
+            border-color: #666;
+        }
+
+        .resumo-item.respondida {
+            background-color: #333;
+            color: white;
+            border-color: #333;
+        }
+
+        .resumo-item.atual {
+            border-color: #2a7d2e;
+            border-width: 3px;
+        }
+    </style>
 </head>
 <body>
-<header>
-    <h1>Sistema de Simulados</h1>
-</header>
+<nav class="navbar">
+    <h1>plataforma de simulados</h1>
+    <div class="progress-info">
+        <span id="progressoQuestoes">questão 0 de 0</span>
+        <span id="respostasCount">0 respondidas</span>
+    </div>
+</nav>
 
 <div class="container">
-    <!-- Informações do Simulado -->
-    <div class="card">
-        <h2>Simulado em Andamento</h2>
-        <p><strong>Aluno:</strong> <span id="nome-usuario"></span></p>
-        <p><strong>Total de Questões:</strong> <span id="total-questoes"></span></p>
-        <p>Marque a alternativa correta para cada questão e clique em "Finalizar Simulado" ao terminar.</p>
+    <div class="simulado-header">
+        <h2>simulado em andamento</h2>
+        <p id="simuladoInfo">carregando...</p>
     </div>
 
-    <!-- Container de Questões -->
-    <div id="questoes-container"></div>
+    <div id="resumoQuestoes" class="resumo-section" style="display: none;">
+        <h3>navegação rápida</h3>
+        <div class="resumo-grid" id="resumoGrid"></div>
+    </div>
 
-    <!-- Botões de Ação -->
-    <div class="card text-center">
-        <button id="btn-finalizar" class="btn btn-large">
-            Finalizar Simulado
-        </button>
-        <button id="btn-cancelar" class="btn btn-secondary">
-            Cancelar e Voltar
-        </button>
+    <div id="questoesContainer">
+        <div class="loading">carregando questões...</div>
+    </div>
+
+    <div class="navigation-buttons" id="navigationButtons" style="display: none;">
+        <button class="secondary" onclick="voltarQuestao()" id="btnVoltar">← anterior</button>
+        <button onclick="proximaQuestao()" id="btnProxima">próxima →</button>
+        <button class="finalizar-btn" onclick="finalizarSimulado()" id="btnFinalizar" style="display: none;">finalizar simulado</button>
     </div>
 </div>
 
 <script>
-    // URL base da API
     const API_URL = 'http://localhost:8080/api';
+    let simuladoData = null;
+    let questaoAtual = 0;
+    let respostas = {}; // { idQuestao: 'A' }
 
-    // Elementos do DOM
-    const nomeUsuarioSpan = document.getElementById('nome-usuario');
-    const totalQuestoesSpan = document.getElementById('total-questoes');
-    const questoesContainer = document.getElementById('questoes-container');
-    const btnFinalizar = document.getElementById('btn-finalizar');
-    const btnCancelar = document.getElementById('btn-cancelar');
+    // carregar simulado ao iniciar página
+    window.addEventListener('DOMContentLoaded', () => {
+        carregarSimulado();
+    });
 
-    // Recupera dados do localStorage
-    const usuarioLogado = JSON.parse(localStorage.getItem('usuario'));
-    const simuladoAtual = JSON.parse(localStorage.getItem('simuladoAtual'));
+    // função para carregar dados do simulado
+    function carregarSimulado() {
+        const simuladoStr = sessionStorage.getItem('simuladoAtual');
 
-    // Verifica se tem dados
-    if (!usuarioLogado || !simuladoAtual) {
-        alert('Erro: dados do simulado não encontrados. Voltando para home.');
-        window.location.href = 'home.html';
-    }
-
-    // Exibe informações do usuário e simulado
-    nomeUsuarioSpan.textContent = usuarioLogado.nome;
-    totalQuestoesSpan.textContent = simuladoAtual.totalQuestoes;
-
-    // Renderiza as questões
-    function renderizarQuestoes() {
-        questoesContainer.innerHTML = '';
-
-        simuladoAtual.questoes.forEach((questao, index) => {
-            const questaoDiv = document.createElement('div');
-            questaoDiv.className = 'questao';
-
-            // Parse das alternativas (formato: "A) texto\nB) texto\nC) texto...")
-            const alternativasTexto = questao.alternativa.split('\n').filter(alt => alt.trim());
-
-            questaoDiv.innerHTML = `
-                    <div class="questao-numero">Questão ${index + 1} de ${simuladoAtual.totalQuestoes}</div>
-                    <div class="questao-enunciado">${questao.enunciado}</div>
-                    <div class="alternativas">
-                        ${alternativasTexto.map(alt => {
-                const letra = alt.charAt(0); // Pega a letra (A, B, C, D, E)
-                const texto = alt.substring(3).trim(); // Pega o texto após "X) "
-                return `
-                                <div class="alternativa">
-                                    <input
-                                        type="radio"
-                                        name="questao-${questao.idQuestao}"
-                                        id="q${questao.idQuestao}-${letra}"
-                                        value="${letra}"
-                                    >
-                                    <label for="q${questao.idQuestao}-${letra}">
-                                        <strong>${letra})</strong> ${texto}
-                                    </label>
-                                </div>
-                            `;
-            }).join('')}
-                    </div>
-                `;
-
-            questoesContainer.appendChild(questaoDiv);
-        });
-    }
-
-    // Renderiza as questões na tela
-    renderizarQuestoes();
-
-    // Handler do botão "Finalizar Simulado"
-    btnFinalizar.addEventListener('click', async () => {
-        // Coleta as respostas do usuário
-        const respostas = [];
-        let todasRespondidas = true;
-
-        simuladoAtual.questoes.forEach(questao => {
-            const respostaSelecionada = document.querySelector(`input[name="questao-${questao.idQuestao}"]:checked`);
-
-            if (!respostaSelecionada) {
-                todasRespondidas = false;
-            } else {
-                respostas.push({
-                    idQuestao: questao.idQuestao,
-                    respostaFornecida: respostaSelecionada.value
-                });
-            }
-        });
-
-        // Verifica se todas as questões foram respondidas
-        if (!todasRespondidas) {
-            alert('Por favor, responda todas as questões antes de finalizar!');
+        if (!simuladoStr) {
+            mostrarErro('dados do simulado não encontrados. voltando para home...');
+            setTimeout(() => {
+                window.location.href = 'home.html';
+            }, 2000);
             return;
         }
 
-        // Desabilita botões
+        try {
+            simuladoData = JSON.parse(simuladoStr);
+
+            if (!simuladoData.questoes || simuladoData.questoes.length === 0) {
+                throw new Error('nenhuma questão encontrada no simulado');
+            }
+
+            // atualizar informações do header
+            document.getElementById('simuladoInfo').textContent =
+                `simulado #${simuladoData.idSimulado} - ${simuladoData.totalQuestoes} questões`;
+
+            // renderizar questões
+            renderizarQuestoes();
+
+            // mostrar resumo e navegação
+            document.getElementById('resumoQuestoes').style.display = 'block';
+            document.getElementById('navigationButtons').style.display = 'flex';
+
+            // atualizar progresso
+            atualizarProgresso();
+
+        } catch (error) {
+            console.error('erro ao carregar simulado:', error);
+            mostrarErro('erro ao processar dados do simulado: ' + error.message);
+        }
+    }
+
+    // função para renderizar todas as questões
+    function renderizarQuestoes() {
+        const container = document.getElementById('questoesContainer');
+        container.innerHTML = '';
+
+        simuladoData.questoes.forEach((questao, index) => {
+            const questaoDiv = criarQuestaoHTML(questao, index);
+            container.appendChild(questaoDiv);
+        });
+
+        // criar resumo de navegação
+        criarResumoNavegacao();
+
+        // mostrar primeira questão
+        mostrarQuestao(0);
+    }
+
+    // função para criar HTML de uma questão
+    function criarQuestaoHTML(questao, index) {
+        const div = document.createElement('div');
+        div.className = 'questao-card hidden';
+        div.id = `questao-${index}`;
+
+        // processar alternativas (vem no formato: "A) texto\nB) texto\n...")
+        const alternativasArray = questao.alternativa.split('\n').filter(alt => alt.trim());
+
+        div.innerHTML = `
+                <div class="questao-header">
+                    <span class="questao-numero">questão ${index + 1}</span>
+                    <span class="questao-materia">${questao.nomeMateria || 'matéria'}</span>
+                </div>
+                <div class="questao-enunciado">${questao.enunciado}</div>
+                <div class="alternativas" id="alternativas-${index}">
+                    ${alternativasArray.map(alt => {
+            const letra = alt.charAt(0); // A, B, C, D, E
+            const texto = alt.substring(3).trim(); // Remove "A) "
+            return `
+                            <label class="alternativa-item" data-questao="${index}" data-letra="${letra}">
+                                <input type="radio" name="questao-${index}" value="${letra}"
+                                    onchange="registrarResposta(${questao.idQuestao}, '${letra}', ${index})">
+                                <span class="alternativa-texto"><strong>${letra})</strong> ${texto}</span>
+                            </label>
+                        `;
+        }).join('')}
+                </div>
+            `;
+
+        return div;
+    }
+
+    // função para criar resumo de navegação
+    function criarResumoNavegacao() {
+        const grid = document.getElementById('resumoGrid');
+        grid.innerHTML = '';
+
+        simuladoData.questoes.forEach((questao, index) => {
+            const item = document.createElement('div');
+            item.className = 'resumo-item';
+            item.textContent = index + 1;
+            item.onclick = () => mostrarQuestao(index);
+            item.id = `resumo-${index}`;
+            grid.appendChild(item);
+        });
+    }
+
+    // função para mostrar uma questão específica
+    function mostrarQuestao(index) {
+        // esconder todas as questões
+        document.querySelectorAll('.questao-card').forEach(card => {
+            card.classList.add('hidden');
+        });
+
+        // mostrar questão selecionada
+        const questaoDiv = document.getElementById(`questao-${index}`);
+        if (questaoDiv) {
+            questaoDiv.classList.remove('hidden');
+            questaoAtual = index;
+
+            // restaurar resposta se já foi selecionada
+            const questao = simuladoData.questoes[index];
+            if (respostas[questao.idQuestao]) {
+                const radio = questaoDiv.querySelector(`input[value="${respostas[questao.idQuestao]}"]`);
+                if (radio) {
+                    radio.checked = true;
+                    radio.parentElement.classList.add('selecionada');
+                }
+            }
+
+            // atualizar botões de navegação
+            document.getElementById('btnVoltar').disabled = (index === 0);
+            document.getElementById('btnProxima').style.display =
+                (index === simuladoData.questoes.length - 1) ? 'none' : 'inline-block';
+            document.getElementById('btnFinalizar').style.display =
+                (index === simuladoData.questoes.length - 1) ? 'inline-block' : 'none';
+
+            // atualizar progresso e resumo
+            atualizarProgresso();
+            atualizarResumo();
+
+            // scroll para o topo
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }
+
+    // função para registrar resposta
+    function registrarResposta(idQuestao, letra, index) {
+        respostas[idQuestao] = letra;
+
+        // atualizar visual da alternativa selecionada
+        const container = document.getElementById(`alternativas-${index}`);
+        container.querySelectorAll('.alternativa-item').forEach(item => {
+            item.classList.remove('selecionada');
+        });
+        container.querySelector(`input[value="${letra}"]`).parentElement.classList.add('selecionada');
+
+        // atualizar progresso
+        atualizarProgresso();
+        atualizarResumo();
+    }
+
+    // função para ir para próxima questão
+    function proximaQuestao() {
+        if (questaoAtual < simuladoData.questoes.length - 1) {
+            mostrarQuestao(questaoAtual + 1);
+        }
+    }
+
+    // função para voltar questão
+    function voltarQuestao() {
+        if (questaoAtual > 0) {
+            mostrarQuestao(questaoAtual - 1);
+        }
+    }
+
+    // função para atualizar progresso
+    function atualizarProgresso() {
+        const total = simuladoData.questoes.length;
+        const respondidas = Object.keys(respostas).length;
+
+        document.getElementById('progressoQuestoes').textContent =
+            `questão ${questaoAtual + 1} de ${total}`;
+        document.getElementById('respostasCount').textContent =
+            `${respondidas} respondidas`;
+    }
+
+    // função para atualizar resumo visual
+    function atualizarResumo() {
+        simuladoData.questoes.forEach((questao, index) => {
+            const item = document.getElementById(`resumo-${index}`);
+            if (item) {
+                // remover classes anteriores
+                item.classList.remove('respondida', 'atual');
+
+                // adicionar classe se respondida
+                if (respostas[questao.idQuestao]) {
+                    item.classList.add('respondida');
+                }
+
+                // marcar questão atual
+                if (index === questaoAtual) {
+                    item.classList.add('atual');
+                }
+            }
+        });
+    }
+
+    // função para finalizar simulado
+    async function finalizarSimulado() {
+        const total = simuladoData.questoes.length;
+        const respondidas = Object.keys(respostas).length;
+
+        if (respondidas < total) {
+            const confirmar = confirm(
+                `você respondeu ${respondidas} de ${total} questões.\n\n` +
+                `deseja finalizar mesmo assim? as questões não respondidas serão marcadas como erradas.`
+            );
+            if (!confirmar) return;
+        }
+
+        const usuario = JSON.parse(sessionStorage.getItem('usuarioLogado'));
+        if (!usuario) {
+            alert('erro: usuário não identificado');
+            return;
+        }
+
+        // desabilitar botão
+        const btnFinalizar = document.getElementById('btnFinalizar');
         btnFinalizar.disabled = true;
-        btnCancelar.disabled = true;
-        btnFinalizar.textContent = 'Enviando respostas...';
+        btnFinalizar.textContent = 'enviando respostas...';
 
         try {
-            // Envia cada resposta para a API
-            for (const resposta of respostas) {
+            // enviar todas as respostas para o backend
+            for (const questao of simuladoData.questoes) {
+                const respostaFornecida = respostas[questao.idQuestao] || 'N'; // N = não respondida
+
                 await fetch(`${API_URL}/respostas/registrar`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        idSimulado: simuladoAtual.simulado.idSimulado,
-                        idQuestao: resposta.idQuestao,
-                        idUsuario: usuarioLogado.idUsuario,
-                        respostaFornecida: resposta.respostaFornecida
+                        idSimulado: simuladoData.idSimulado,
+                        idQuestao: questao.idQuestao,
+                        idUsuario: usuario.idUsuario,
+                        respostaFornecida: respostaFornecida
                     })
                 });
             }
 
-            // Após enviar todas as respostas, corrige o simulado
-            const correcaoResponse = await fetch(`${API_URL}/respostas/corrigir/${simuladoAtual.simulado.idSimulado}`, {
-                method: 'POST'
-            });
+            // salvar id do simulado para página de resultado
+            sessionStorage.setItem('idSimuladoResultado', simuladoData.idSimulado);
 
-            const resultado = await correcaoResponse.json();
+            // limpar dados do simulado atual
+            sessionStorage.removeItem('simuladoAtual');
 
-            if (resultado.sucesso) {
-                // Salva resultado no localStorage
-                localStorage.setItem('resultado', JSON.stringify(resultado));
-                // Redireciona para página de resultado
-                window.location.href = 'resultado.html';
-            } else {
-                alert('Erro ao corrigir simulado: ' + resultado.mensagem);
-                btnFinalizar.disabled = false;
-                btnCancelar.disabled = false;
-                btnFinalizar.textContent = 'Finalizar Simulado';
-            }
+            // redirecionar para resultado
+            window.location.href = 'resultado.html';
+
         } catch (error) {
-            alert('Erro ao enviar respostas. Verifique se o backend está rodando.');
-            console.error('Erro:', error);
+            console.error('erro ao finalizar simulado:', error);
+            alert('erro ao enviar respostas. tente novamente.');
             btnFinalizar.disabled = false;
-            btnCancelar.disabled = false;
-            btnFinalizar.textContent = 'Finalizar Simulado';
+            btnFinalizar.textContent = 'finalizar simulado';
         }
-    });
+    }
 
-    // Handler do botão "Cancelar"
-    btnCancelar.addEventListener('click', () => {
-        if (confirm('Tem certeza que deseja cancelar o simulado? Seu progresso será perdido.')) {
-            localStorage.removeItem('simuladoAtual');
-            window.location.href = 'home.html';
+    // função para mostrar erro
+    function mostrarErro(mensagem) {
+        const container = document.getElementById('questoesContainer');
+        container.innerHTML = `<div class="error-message">${mensagem}</div>`;
+    }
+
+    // prevenir saída acidental
+    window.addEventListener('beforeunload', (e) => {
+        if (simuladoData && Object.keys(respostas).length > 0) {
+            e.preventDefault();
+            e.returnValue = '';
         }
     });
 </script>

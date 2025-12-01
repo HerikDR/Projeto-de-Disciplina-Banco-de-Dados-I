@@ -1,9 +1,11 @@
 package com.simulados.service;
 
+import com.simulados.model.Materia;
 import com.simulados.model.Questao;
 import com.simulados.model.RespostaUsuario;
 import com.simulados.repository.*;
 
+import java.sql.SQLException;
 import java.util.*;
 
 /**
@@ -11,25 +13,26 @@ import java.util.*;
  * Inclui lógica de correção de simulados e cálculo de desempenho
  */
 public class RespostaService {
-
     private final RespostaUsuarioRepository respostaRepository;
     private final SimuladoRepository simuladoRepository;
     private final QuestaoRepository questaoRepository;
     private final UsuarioRepository usuarioRepository;
+    private final MateriaRepository materiaRepository;
 
     // Construtor - instancia os repositories
-    public RespostaService() {
+    public RespostaService() throws SQLException {
         this.respostaRepository = new RespostaUsuarioRepositoryImpl();
         this.simuladoRepository = new SimuladoRepositoryImpl();
         this.questaoRepository = new QuestaoRepositoryImpl();
         this.usuarioRepository = new UsuarioRepositoryImpl();
+        this.materiaRepository = new MateriaRepositoryImpl();
     }
 
     /**
      * Registra a resposta de um usuário para uma questão de um simulado
      */
     public RespostaUsuario registrarResposta(Integer idSimulado, Integer idQuestao,
-                                             Integer idUsuario, String respostaFornecida) {
+                                             Integer idUsuario, String respostaFornecida) throws SQLException {
         // Validações
         if (idSimulado == null || idSimulado <= 0) {
             throw new IllegalArgumentException("ID do simulado inválido!");
@@ -58,7 +61,7 @@ public class RespostaService {
         }
 
         // Verifica se o usuário existe
-        if (usuarioRepository.buscarPorId(idUsuario).isEmpty()) {
+        if (usuarioRepository.buscarPorId(idUsuario) == null) {
             throw new IllegalArgumentException("Usuário não encontrado!");
         }
 
@@ -83,6 +86,7 @@ public class RespostaService {
     /**
      * Corrige um simulado e retorna o resultado completo
      * Retorna mapa com: acertos, erros, nota, percentual, detalhes por questão
+     * CORRIGIDO: Agora inclui o nome da matéria (nomeMateria) nos detalhes
      */
     public Map<String, Object> corrigirSimulado(Integer idSimulado) {
         // Validação
@@ -120,7 +124,16 @@ public class RespostaService {
                     erros++;
                 }
 
-                // Monta detalhes da questão
+                // Busca o nome da matéria
+                String nomeMateria = "sem matéria";
+                if (questao.getIdMateria() != null) {
+                    Optional<Materia> materiaOpt = materiaRepository.buscarPorId(questao.getIdMateria());
+                    if (materiaOpt.isPresent()) {
+                        nomeMateria = materiaOpt.get().getNome();
+                    }
+                }
+
+                // Monta detalhes da questão (AGORA COM NOME DA MATÉRIA)
                 Map<String, Object> detalhe = new HashMap<>();
                 detalhe.put("idQuestao", questao.getIdQuestao());
                 detalhe.put("enunciado", questao.getEnunciado());
@@ -128,7 +141,7 @@ public class RespostaService {
                 detalhe.put("respostaCorreta", questao.getRespostaCorreta());
                 detalhe.put("acertou", acertou);
                 detalhe.put("idMateria", questao.getIdMateria());
-
+                detalhe.put("nomeMateria", nomeMateria);  // ✅ ADICIONADO!
                 detalhesQuestoes.add(detalhe);
             }
         }
@@ -144,9 +157,9 @@ public class RespostaService {
         resultado.put("totalQuestoes", totalQuestoes);
         resultado.put("acertos", acertos);
         resultado.put("erros", erros);
-        resultado.put("percentual", String.format("%.2f", percentual) + "%");
-        resultado.put("nota", String.format("%.2f", nota));
-        resultado.put("detalhesQuestoes", detalhesQuestoes);
+        resultado.put("percentualAcerto", percentual);  // ✅ MUDADO DE "percentual" para "percentualAcerto"
+        resultado.put("nota", nota);  // ✅ AGORA É NÚMERO, NÃO STRING
+        resultado.put("detalhes", detalhesQuestoes);  // ✅ MUDADO DE "detalhesQuestoes" para "detalhes"
 
         return resultado;
     }
@@ -192,6 +205,7 @@ public class RespostaService {
         if (idSimulado == null || idSimulado <= 0) {
             throw new IllegalArgumentException("ID do simulado inválido!");
         }
+
         return respostaRepository.buscarPorSimulado(idSimulado);
     }
 
@@ -202,6 +216,7 @@ public class RespostaService {
         if (idUsuario == null || idUsuario <= 0) {
             throw new IllegalArgumentException("ID do usuário inválido!");
         }
+
         return respostaRepository.buscarPorUsuario(idUsuario);
     }
 
@@ -213,6 +228,7 @@ public class RespostaService {
                 idUsuario == null || idUsuario <= 0) {
             throw new IllegalArgumentException("IDs inválidos!");
         }
+
         return respostaRepository.buscarResposta(idSimulado, idQuestao, idUsuario);
     }
 
@@ -225,7 +241,7 @@ public class RespostaService {
         }
 
         Optional<RespostaUsuario> resposta = respostaRepository.buscarPorId(id);
-        if (resposta.isEmpty()) {
+        if (!resposta.isPresent()) {
             throw new IllegalArgumentException("Resposta não encontrada!");
         }
 
@@ -240,6 +256,7 @@ public class RespostaService {
         if (idSimulado == null || idSimulado <= 0) {
             throw new IllegalArgumentException("ID do simulado inválido!");
         }
+
         return respostaRepository.deletarPorSimulado(idSimulado);
     }
 
@@ -250,6 +267,7 @@ public class RespostaService {
         if (idSimulado == null || idSimulado <= 0) {
             return 0;
         }
+
         return respostaRepository.contarRespostasPorSimulado(idSimulado);
     }
 

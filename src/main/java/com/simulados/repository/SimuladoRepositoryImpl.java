@@ -17,7 +17,7 @@ public class SimuladoRepositoryImpl implements SimuladoRepository {
     private final Connection connection;
 
     // Construtor - obtém conexão do DatabaseConnection
-    public SimuladoRepositoryImpl() {
+    public SimuladoRepositoryImpl() throws SQLException {
         this.connection = DatabaseConnection.getInstance().getConnection();
     }
 

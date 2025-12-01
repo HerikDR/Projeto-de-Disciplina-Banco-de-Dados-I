@@ -6,6 +6,7 @@ import com.simulados.repository.CursoRepositoryImpl;
 import com.simulados.repository.UsuarioRepository;
 import com.simulados.repository.UsuarioRepositoryImpl;
 
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,7 +19,7 @@ public class CursoService {
     private final UsuarioRepository usuarioRepository;
 
     // Construtor - instancia os repositories
-    public CursoService() {
+    public CursoService() throws SQLException {
         this.cursoRepository = new CursoRepositoryImpl();
         this.usuarioRepository = new UsuarioRepositoryImpl();
     }
@@ -27,13 +28,13 @@ public class CursoService {
      * Cadastra um novo curso no sistema
      * Valida se o usuário existe e se o nome do curso não está duplicado
      */
-    public Curso cadastrarCurso(Integer idUsuario, String nomeCurso) {
+    public Curso cadastrarCurso(Integer idUsuario, String nomeCurso) throws SQLException {
         // Validação: verifica se o usuário existe
         if (idUsuario == null || idUsuario <= 0) {
             throw new IllegalArgumentException("ID do usuário inválido!");
         }
 
-        if (usuarioRepository.buscarPorId(idUsuario).isEmpty()) {
+        if (usuarioRepository.buscarPorId(idUsuario) == null) {
             throw new IllegalArgumentException("Usuário não encontrado!");
         }
 
@@ -73,13 +74,13 @@ public class CursoService {
     /**
      * Busca todos os cursos de um usuário específico
      */
-    public List<Curso> listarCursosPorUsuario(Integer idUsuario) {
+    public List<Curso> listarCursosPorUsuario(Integer idUsuario) throws SQLException {
         if (idUsuario == null || idUsuario <= 0) {
             throw new IllegalArgumentException("ID do usuário inválido!");
         }
 
         // Verifica se o usuário existe
-        if (usuarioRepository.buscarPorId(idUsuario).isEmpty()) {
+        if (usuarioRepository.buscarPorId(idUsuario) == null) {
             throw new IllegalArgumentException("Usuário não encontrado!");
         }
 
@@ -100,10 +101,10 @@ public class CursoService {
      * Atualiza os dados de um curso
      * Verifica se o novo nome não está sendo usado por outro curso do mesmo usuário
      */
-    public boolean atualizarCurso(Integer id, Integer idUsuario, String nomeCurso) {
+    public boolean atualizarCurso(Integer id, Integer idUsuario, String nomeCurso) throws SQLException {
         // Verifica se o curso existe
         Optional<Curso> cursoExistente = cursoRepository.buscarPorId(id);
-        if (cursoExistente.isEmpty()) {
+        if (!cursoExistente.isPresent()) {
             throw new IllegalArgumentException("Curso não encontrado!");
         }
 
@@ -112,7 +113,7 @@ public class CursoService {
             throw new IllegalArgumentException("ID do usuário inválido!");
         }
 
-        if (usuarioRepository.buscarPorId(idUsuario).isEmpty()) {
+        if (usuarioRepository.buscarPorId(idUsuario) == null) {
             throw new IllegalArgumentException("Usuário não encontrado!");
         }
 
@@ -140,7 +141,7 @@ public class CursoService {
 
         // Verifica se o curso existe
         Optional<Curso> curso = cursoRepository.buscarPorId(id);
-        if (curso.isEmpty()) {
+        if (!curso.isPresent()) {
             throw new IllegalArgumentException("Curso não encontrado!");
         }
 
@@ -182,3 +183,4 @@ public class CursoService {
         return curso.isPresent() && curso.get().getIdUsuario().equals(idUsuario);
     }
 }
+

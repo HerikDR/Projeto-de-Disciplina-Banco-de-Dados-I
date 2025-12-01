@@ -33,7 +33,6 @@ public class DatabaseConnection {
 
             // Estabelece a conexão
             this.connection = DriverManager.getConnection(URL, USUARIO, SENHA);
-
             System.out.println("✓ Conexão com PostgreSQL estabelecida com sucesso!");
 
         } catch (ClassNotFoundException e) {
@@ -67,11 +66,28 @@ public class DatabaseConnection {
     }
 
     /**
-     * Retorna o objeto Connection ativo
+     * Cria uma NOVA conexão (não usa Singleton)
+     * Útil para transações isoladas
+     * IMPORTANTE: Deve ser fechada com try-with-resources
+     *
+     * @return nova conexão JDBC
+     * @throws SQLException se houver erro na conexão
+     */
+    public static Connection getConnection() throws SQLException {
+        try {
+            Class.forName(DRIVER);
+            return DriverManager.getConnection(URL, USUARIO, SENHA);
+        } catch (ClassNotFoundException e) {
+            throw new SQLException("Driver JDBC do PostgreSQL não encontrado", e);
+        }
+    }
+
+    /**
+     * Retorna o objeto Connection ativo (Singleton)
      *
      * @return conexão JDBC com o banco de dados
      */
-    public Connection getConnection() {
+    public Connection getConnectionInstance() {
         return connection;
     }
 
@@ -122,3 +138,4 @@ public class DatabaseConnection {
         }
     }
 }
+

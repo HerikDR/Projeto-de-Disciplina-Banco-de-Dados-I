@@ -3,115 +3,324 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Simulados - Home</title>
-    <link rel="stylesheet" href="css/style.css">
+    <title>home - plataforma de simulados</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .navbar {
+            background-color: #fff;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar h1 {
+            font-size: 1.5rem;
+            color: #333;
+        }
+
+        .navbar-right {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .user-info {
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        button {
+            background-color: #333;
+            color: white;
+            border: none;
+            padding: 0.6rem 1.5rem;
+            cursor: pointer;
+            font-size: 0.95rem;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #555;
+        }
+
+        button:disabled {
+            background-color: #999;
+            cursor: not-allowed;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .welcome-section {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .welcome-section h2 {
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .action-card {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .action-card h3 {
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .action-card p {
+            color: #666;
+            margin-bottom: 1.5rem;
+        }
+
+        .historico-section {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-top: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .historico-section h3 {
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .simulado-item {
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .simulado-item:last-child {
+            border-bottom: none;
+        }
+
+        .error-message {
+            background-color: #fee;
+            color: #c33;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+    </style>
 </head>
 <body>
-<header>
-    <h1>Sistema de Simulados</h1>
-</header>
+<nav class="navbar">
+    <h1>plataforma de simulados</h1>
+    <div class="navbar-right">
+        <span class="user-info" id="userInfo"></span>
+        <button onclick="logout()">sair</button>
+    </div>
+</nav>
 
 <div class="container">
-    <!-- Card de Boas-vindas -->
-    <div class="card">
-        <h2>Bem-vindo(a), <span id="nome-usuario"></span>!</h2>
-        <p>Prepare-se para testar seus conhecimentos através de simulados personalizados.</p>
-        <p>Cada simulado contém 10 questões de matérias variadas, selecionadas aleatoriamente para você.</p>
+    <div class="welcome-section">
+        <h2 id="welcomeMessage">bem-vindo!</h2>
+        <p>escolha uma das opções abaixo para começar</p>
     </div>
 
-    <!-- Card de Ações -->
-    <div class="card text-center">
-        <h2>Iniciar Novo Simulado</h2>
-        <p>Clique no botão abaixo para gerar um novo simulado com 10 questões aleatórias.</p>
-        <button id="btn-iniciar-simulado" class="btn btn-large">
-            Iniciar Simulado
-        </button>
-        <div id="loading" class="loading hidden">
-            Gerando simulado, aguarde...
+    <div class="actions-grid">
+        <div class="action-card">
+            <h3>iniciar simulado</h3>
+            <p>realize um simulado com 10 questões aleatórias</p>
+            <button onclick="gerarSimulado()">iniciar simulado</button>
+            <div class="error-message" id="errorSimulado"></div>
+        </div>
+
+        <div class="action-card">
+            <h3>ver desempenho</h3>
+            <p>visualize suas estatísticas e gráficos de evolução</p>
+            <button onclick="verDesempenho()">ver desempenho</button>
         </div>
     </div>
 
-    <!-- Botão de Logout -->
-    <div class="card text-center">
-        <button id="btn-logout" class="btn btn-secondary">
-            Sair
-        </button>
+    <div class="historico-section">
+        <h3>histórico de simulados</h3>
+        <div id="historicoList">
+            <div class="loading">carregando histórico...</div>
+        </div>
     </div>
 </div>
 
 <script>
-    // URL base da API
     const API_URL = 'http://localhost:8080/api';
 
-    // Elementos do DOM
-    const nomeUsuarioSpan = document.getElementById('nome-usuario');
-    const btnIniciarSimulado = document.getElementById('btn-iniciar-simulado');
-    const loadingDiv = document.getElementById('loading');
-    const btnLogout = document.getElementById('btn-logout');
+    // verificar se usuário está logado
+    window.addEventListener('DOMContentLoaded', () => {
+        const usuario = JSON.parse(sessionStorage.getItem('usuarioLogado'));
 
-    // Verificar se o usuário está logado
-    const usuarioLogado = JSON.parse(localStorage.getItem('usuario'));
+        if (!usuario) {
+            alert('você precisa estar logado para acessar esta página');
+            window.location.href = 'index.html';
+            return;
+        }
 
-    if (!usuarioLogado) {
-        // Se não estiver logado, redireciona para login
-        window.location.href = 'index.html';
-    } else {
-        // Exibe o nome do usuário
-        nomeUsuarioSpan.textContent = usuarioLogado.nome;
-    }
+        // exibir nome do usuário
+        document.getElementById('userInfo').textContent = `olá, ${usuario.nome}`;
+        document.getElementById('welcomeMessage').textContent = `bem-vindo, ${usuario.nome}!`;
 
-    // Handler do botão "Iniciar Simulado"
-    btnIniciarSimulado.addEventListener('click', async () => {
-        // Desabilita o botão e mostra loading
-        btnIniciarSimulado.disabled = true;
-        loadingDiv.classList.remove('hidden');
+        // carregar histórico de simulados
+        carregarHistorico(usuario.idUsuario);
+    });
+
+    // função para gerar simulado
+    async function gerarSimulado() {
+        const usuario = JSON.parse(sessionStorage.getItem('usuarioLogado'));
+
+        if (!usuario) {
+            alert('usuário não está logado!');
+            window.location.href = 'index.html';
+            return;
+        }
+
+        // mostrar loading
+        const btnIniciar = event.target;
+        const textoOriginal = btnIniciar.textContent;
+        btnIniciar.disabled = true;
+        btnIniciar.textContent = 'gerando simulado...';
+
+        const errorDiv = document.getElementById('errorSimulado');
+        errorDiv.style.display = 'none';
 
         try {
-            // Faz requisição para gerar simulado aleatório com 10 questões
+            // chamar API para gerar simulado com 10 questões
             const response = await fetch(`${API_URL}/simulados/gerar-aleatorio`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    idUsuario: usuarioLogado.idUsuario,
-                    quantidadeQuestoes: 10
+                    idUsuario: usuario.idUsuario,
+                    quantidadeQuestoes: 10  // 10 questões distribuídas igualmente entre matérias
                 })
             });
 
             const data = await response.json();
 
-            if (data.sucesso) {
-                // Salva os dados do simulado no localStorage
-                localStorage.setItem('simuladoAtual', JSON.stringify({
-                    simulado: data.simulado,
+            if (data.sucesso && data.idSimulado) {
+                // salvar dados do simulado no sessionStorage
+                sessionStorage.setItem('simuladoAtual', JSON.stringify({
+                    idSimulado: data.idSimulado,
                     questoes: data.questoes,
-                    totalQuestoes: data.totalQuestoes
+                    totalQuestoes: data.totalQuestoes,
+                    dataRealizacao: data.dataRealizacao
                 }));
 
-                // Redireciona para a página do simulado
+                // redirecionar para página do simulado
                 window.location.href = 'simulado.html';
             } else {
-                alert('Erro ao gerar simulado: ' + data.mensagem);
-                btnIniciarSimulado.disabled = false;
-                loadingDiv.classList.add('hidden');
+                throw new Error(data.mensagem || 'erro ao gerar simulado');
             }
         } catch (error) {
-            alert('Erro ao conectar com o servidor. Verifique se o backend está rodando.');
-            console.error('Erro:', error);
-            btnIniciarSimulado.disabled = false;
-            loadingDiv.classList.add('hidden');
+            console.error('erro ao gerar simulado:', error);
+            errorDiv.textContent = `erro: ${error.message}. verifique se o backend está rodando.`;
+            errorDiv.style.display = 'block';
+            btnIniciar.disabled = false;
+            btnIniciar.textContent = textoOriginal;
         }
-    });
+    }
 
-    // Handler do botão "Sair"
-    btnLogout.addEventListener('click', () => {
-        // Remove dados do localStorage
-        localStorage.removeItem('usuario');
-        localStorage.removeItem('simuladoAtual');
-        // Redireciona para login
+    // função para ver desempenho
+    function verDesempenho() {
+        window.location.href = 'desempenho.html';
+    }
+
+    // função para carregar histórico de simulados
+    async function carregarHistorico(idUsuario) {
+        const historicoDiv = document.getElementById('historicoList');
+
+        try {
+            const response = await fetch(`${API_URL}/simulados/usuario/${idUsuario}`);
+            const data = await response.json();
+
+            if (data.sucesso && data.simulados && data.simulados.length > 0) {
+                historicoDiv.innerHTML = '';
+
+                // mostrar apenas os últimos 5 simulados
+                const ultimos = data.simulados.slice(0, 5);
+
+                ultimos.forEach(simulado => {
+                    const item = document.createElement('div');
+                    item.className = 'simulado-item';
+
+                    const dataFormatada = new Date(simulado.dataRealizacao).toLocaleString('pt-BR');
+
+                    item.innerHTML = `
+                            <div>
+                                <strong>simulado #${simulado.idSimulado}</strong><br>
+                                <small>${dataFormatada}</small>
+                            </div>
+                            <button onclick="verResultado(${simulado.idSimulado})">ver resultado</button>
+                        `;
+
+                    historicoDiv.appendChild(item);
+                });
+            } else {
+                historicoDiv.innerHTML = '<p style="color: #666; text-align: center;">nenhum simulado realizado ainda</p>';
+            }
+        } catch (error) {
+            console.error('erro ao carregar histórico:', error);
+            historicoDiv.innerHTML = '<p style="color: #c33; text-align: center;">erro ao carregar histórico</p>';
+        }
+    }
+
+    // função para ver resultado de um simulado
+    function verResultado(idSimulado) {
+        sessionStorage.setItem('idSimuladoResultado', idSimulado);
+        window.location.href = 'resultado.html';
+    }
+
+    // função para logout
+    function logout() {
+        sessionStorage.removeItem('usuarioLogado');
+        sessionStorage.removeItem('simuladoAtual');
+        sessionStorage.removeItem('idSimuladoResultado');
         window.location.href = 'index.html';
-    });
+    }
 </script>
 </body>
 </html>

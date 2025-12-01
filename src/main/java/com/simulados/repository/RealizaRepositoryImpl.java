@@ -16,7 +16,7 @@ public class RealizaRepositoryImpl implements RealizaRepository {
     private final Connection connection;
 
     // Construtor - obtém conexão do DatabaseConnection
-    public RealizaRepositoryImpl() {
+    public RealizaRepositoryImpl() throws SQLException {
         this.connection = DatabaseConnection.getInstance().getConnection();
     }
 

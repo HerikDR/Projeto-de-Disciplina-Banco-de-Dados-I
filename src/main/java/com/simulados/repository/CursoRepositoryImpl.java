@@ -16,7 +16,7 @@ public class CursoRepositoryImpl implements CursoRepository {
     private final Connection connection;
 
     // Construtor - obtém conexão do DatabaseConnection
-    public CursoRepositoryImpl() {
+    public CursoRepositoryImpl() throws SQLException {
         this.connection = DatabaseConnection.getInstance().getConnection();
     }
 

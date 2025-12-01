@@ -16,7 +16,7 @@ public class QuestaoRepositoryImpl implements QuestaoRepository {
     private final Connection connection;
 
     // Construtor - obtém conexão do DatabaseConnection
-    public QuestaoRepositoryImpl() {
+    public QuestaoRepositoryImpl() throws SQLException {
         this.connection = DatabaseConnection.getInstance().getConnection();
     }
 

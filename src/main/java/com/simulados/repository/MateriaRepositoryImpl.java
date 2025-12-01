@@ -16,7 +16,7 @@ public class MateriaRepositoryImpl implements MateriaRepository {
     private final Connection connection;
 
     // Construtor - obtém conexão do DatabaseConnection
-    public MateriaRepositoryImpl() {
+    public MateriaRepositoryImpl() throws SQLException {
         this.connection = DatabaseConnection.getInstance().getConnection();
     }
 

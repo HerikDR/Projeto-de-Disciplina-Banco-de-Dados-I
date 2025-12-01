@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +24,7 @@ public class CursoController {
     private final CursoService cursoService;
 
     // Construtor - instancia o service
-    public CursoController() {
+    public CursoController() throws SQLException {
         this.cursoService = new CursoService();
     }
 
